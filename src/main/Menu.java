@@ -234,4 +234,49 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
         }
     }
 
+// OPCAO 7 — Alterar capacidade
+
+    /**
+     * Solicita uma percentagem e altera a capacidade de todas as enfermarias.
+     * Lança exceção se não existirem enfermarias ou a percentagem for inválida.
+     *
+     * @throws HospitalException se não existirem enfermarias ou a percentagem for inválida
+     */
+    private void alterarCapacidadeEnfermarias() throws HospitalException {
+        System.out.println("\n--- Alterar Capacidade das Enfermarias ---");
+        validarHospitalNaoVazio();
+
+        System.out.print("Percentagem de variacao (ex: 10 para +10%, -20 para -20%): ");
+        String texto = leitor.nextLine().trim();
+
+        double percentagem = validarPercentagem(texto);
+
+        Enfermaria.alterarCapacidade(hospital.getEnfermarias(), percentagem);
+        System.out.printf("Capacidade ajustada em %.1f%%.%n", percentagem);
+
+        System.out.println("\nEstado atual:");
+        for (Enfermaria enf : hospital.getEnfermarias()) {
+            System.out.printf("  %s | Camas: %d%n", enf.getIdentificador(), enf.getNumeroCamas());
+        }
+    }
+
+    /**
+     * Converte e valida uma string como percentagem de variação.
+     * Utilizado nos testes unitários para verificar a lógica de validação.
+     *
+     * @param texto texto introduzido pelo utilizador
+     * @return valor decimal da percentagem
+     * @throws HospitalException se o texto não for um número válido
+     */
+    public static double validarPercentagem(String texto) throws HospitalException {
+        if (texto == null || texto.isBlank()) {
+            throw new HospitalException("A percentagem nao pode estar vazia.");
+        }
+        try {
+            return Double.parseDouble(texto.replace(',', '.'));
+        } catch (NumberFormatException e) {
+            throw new HospitalException("Percentagem invalida: '" + texto + "'. Introduza um numero.", e);
+        }
+    }
+
 
