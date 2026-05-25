@@ -221,5 +221,47 @@ public class AnalisadorEstatistico {
         int camas = enfermaria.getNumeroCamas();
         return camas == 0 ? 0.0 : ((admissoes + altas) * 100.0) / camas;
     }
+
+    /**
+     * Calcula a percentagem de enfermarias com taxa de ocupação superior
+     * a 85% numa data de referência (RF5).
+     *
+     * @param enfermarias lista de enfermarias a analisar
+     * @param data        data de referência
+     * @return percentagem (0–100) de enfermarias em pressão;
+     *         0.0 se a lista for nula ou vazia
+     */
+    public static double percentagemEmPressao(List<Enfermaria> enfermarias, LocalDate data) {
+        if (enfermarias == null || enfermarias.isEmpty()) {
+            return 0.0;
+        }
+        int emPressao = 0;
+        for (Enfermaria e : enfermarias) {
+            if (e.emPressao(data)) {
+                emPressao++;
+            }
+        }
+        return (emPressao * 100.0) / enfermarias.size();
+    }
+
+    /**
+     * Conta o número absoluto de enfermarias em pressão numa data.
+     *
+     * @param enfermarias lista de enfermarias
+     * @param data        data de referência
+     * @return número de enfermarias com ocupação superior a 85%
+     */
+    public static int contarEmPressao(List<Enfermaria> enfermarias, LocalDate data) {
+        if (enfermarias == null) {
+            return 0;
+        }
+        int count = 0;
+        for (Enfermaria e : enfermarias) {
+            if (e.emPressao(data)) {
+                count++;
+            }
+        }
+        return count;
+    }
 }
 
