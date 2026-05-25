@@ -74,6 +74,84 @@ public class Menu {
         if (op == 1) novaEnfermaria();
         else if (op == 2) novoEpisodio();
     }
+
+
+
+
+
+
+    private void novaEnfermaria() {
+
+        System.out.println("\n Tipo:");
+
+        System.out.println(" 1. Geral");
+
+        System.out.println(" 2. Psiquiátrica");
+
+        System.out.println(" 3. Cuidados Intensivos");
+
+
+
+        int tipo = lerOpcao(1, 3);
+
+        try {
+
+            Enfermaria e = switch (tipo) {
+
+                case 1 -> lc.lerEnfermariaGeral();
+
+                case 2 -> lc.lerEnfermariaPsiquiatrica();
+
+                case 3 -> lc.lerEnfermariaCuidadosIntensivos();
+
+                default -> throw new DadosInvalidosException("Tipo inválido.");
+
+            };
+
+
+
+            if (hospital.adicionarEnfermaria(e))
+
+                System.out.println(" Enfermaria '" + e.getIdentificador() + "' adicionada.");
+
+            else
+
+                System.out.println(" Já existe uma enfermaria com esse ID.");
+
+
+
+        } catch (DadosInvalidosException | IllegalArgumentException e) {
+
+            System.out.println(" [ERRO] " + e.getMessage());
+
+        }
+
+    }
+
+
+
+    private void novoEpisodio() {
+
+        Enfermaria enf = selecionarEnfermaria();
+
+        if (enf == null) return;
+
+        try {
+
+            lc.lerEAdicionarEpisodio(enf);
+
+        } catch (DadosInvalidosException | EnfermariaException e) {
+
+            System.out.println(" [ERRO] " + e.getMessage());
+
+        }
+
+    }
+
+
+
+
+
     /**
      * Opção 1: Listagem simples de controlo das enfermarias em memória.
      */
