@@ -44,9 +44,64 @@ public class Menu {
                 opcao = Integer.parseInt(leitor.nextLine().trim());
                 processarOpcao(opcao);
             } catch (NumberFormatException e) {
-                System.out.println("\n[ERRO] Por favor, introduza um numero inteiro valido.");
+                System.out.println("\n Por favor, introduza um numero inteiro valido.");
             }
         }
     }
 
+    /**
+     * Encaminha a opção escolhida para o método correspondente.
+     */
+    private void processarOpcao(int opcao) {
+        switch (opcao) {
+            case 1:
+                executarListagemEnfermarias();
+                break;
+            case 4:
+                executarAlterarCapacidade();
+                break;
+            case 0:
+                System.out.println("\nA sair do menu...");
+                break;
+            default:
+                System.out.println("\n[AVISO] Opcao invalida! Tente novamente.");
+        }
     }
+    /**
+     * Opção 1: Listagem simples de controlo das enfermarias em memória.
+     */
+    private void ejecutarListagemEnfermarias() {
+        System.out.println("\n--- ENFERMARIAS EM MEMÓRIA ---");
+        if (hospital.getEnfermarias().isEmpty()) {
+            System.out.println("Nao existem enfermarias carregadas.");
+            return;
+        }
+        for (Enfermaria enf : hospital.getEnfermarias()) {
+            System.out.println(enf);
+        }
+    }
+
+    /**
+     * Opção 4: Executa o Requisito Funcional 4 (Alterar Capacidade).
+     */
+    private void executarAlterarCapacidade() {
+        System.out.println("\n--- ALTERAR CAPACIDADE DAS ENFERMARIAS (RF4) ---");
+        System.out.print("Introduza a percentagem de alteracao (ex: 10 para aumentar, -5 para diminuir): ");
+
+        try {
+            double percentagem = Double.parseDouble(leitor.nextLine().trim());
+
+            // Invoca o método estático que criámos na classe Enfermaria
+            Enfermaria.alterarCapacidade(hospital.getEnfermarias(), percentagem);
+
+            System.out.println("\n[SUCESSO] Capacidade de todas as enfermarias alterada com sucesso!");
+
+        } catch (NumberFormatException e) {
+            System.out.println("\n[ERRO] Percentagem invalida. Introduza um valor numerico.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("\n[ERRO] Falha na validacao: " + e.getMessage());
+        }
+    }
+
+    }
+
