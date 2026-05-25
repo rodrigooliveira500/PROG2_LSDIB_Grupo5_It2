@@ -115,7 +115,6 @@ public class Menu {
                 new File(diretorio, "episodios.csv").getPath(), hospital);
         System.out.println("  Consulte 'erros_validacao.log' para entradas rejeitadas.");
     }
-
     /**
      * Valida se o diretório existe e contém os ficheiros CSV necessários.
      * Utilizado também nos testes unitários para verificar a lógica de validação.
@@ -142,3 +141,37 @@ public class Menu {
         }
     }
 
+/**
+ * Apresenta os indicadores de ocupação de todas as enfermarias numa data introduzida.
+ * Lança exceção se não existirem enfermarias carregadas.
+ *
+ * @throws HospitalException se não existirem enfermarias no hospital
+ */
+
+private void mostrarIndicadoresOcupacao() throws HospitalException {
+    System.out.println("\n--- Indicadores de Ocupacao ---");
+    validarHospitalNaoVazio();
+
+    LocalDate data = GestorConsola.lerData(leitor, "Data de referencia (AAAA-MM-DD): ");
+    validarData(data);
+
+    System.out.println("\n" + SEPARADOR);
+    System.out.printf("  Ocupacao em %s%n", data);
+    System.out.println(SEPARADOR);
+
+    for (Enfermaria enf : hospital.getEnfermarias()) {
+        System.out.printf("%n  Enfermaria : %s%n", enf.getIdentificador());
+        System.out.printf("  Ocupacao   : %d / %d camas%n", enf.getOcupacaoAbsoluta(data), enf.getNumeroCamas());
+        System.out.printf("  Taxa       : %.1f%%%n", enf.getTaxaOcupacao(data));
+        System.out.printf("  Estado     : %s%n", enf.emPressao(data) ? "Em pressao" : "Estado normal");
+    }
+
+    System.out.println("\n" + SEPARADOR);
+    System.out.println("  Sumario de LoS por Enfermaria");
+    System.out.println(SEPARADOR);
+
+    for (Enfermaria enf : hospital.getEnfermarias()) {
+        AnalisadorEstatistico.SumarioLoS sumario = AnalisadorEstatistico.calculasEstatisticaLoS(enf);
+        System.out.printf("  %s: %s%n", enf.getIdentificador(), sumario);
+    }
+}
