@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Representa uma enfermaria do hospital.
  */
-public abstract class Enfermaria implements Analisavel {
+public abstract class Enfermaria implements Analisavel, java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
     /** Identificador da enfermaria. */
     private String identificador;

@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Representa um hospital com várias enfermarias.
  */
-public class Hospital {
+public class Hospital implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
     /** Nome do hospital. */
     private String nome;
