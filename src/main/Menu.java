@@ -175,3 +175,63 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
         System.out.printf("  %s: %s%n", enf.getIdentificador(), sumario);
     }
 }
+    /**
+     * Solicita um intervalo de datas e apresenta a análise de pressão diária.
+     * Lança exceção se não existirem enfermarias ou se o intervalo for inválido.
+     *
+     * @throws HospitalException se não existirem enfermarias ou o intervalo for inválido
+     */
+    private void analisarPressaoIntervalo() throws HospitalException {
+        System.out.println("\n--- Analise de Pressao por Intervalo ---");
+        validarHospitalNaoVazio();
+
+        LocalDate inicio = GestorConsola.lerData(leitor, "Data de inicio (AAAA-MM-DD): ");
+        LocalDate fim    = GestorConsola.lerData(leitor, "Data de fim   (AAAA-MM-DD): ");
+
+        validarIntervalo(inicio, fim);
+
+        System.out.println();
+        for (Enfermaria enf : hospital.getEnfermarias()) {
+            System.out.printf("%nEnfermaria %s:%n", enf.getIdentificador());
+            AnalisadorEstatistico.analisarPressaoPorIntervalo(enf, inicio, fim);
+        }
+    }
+
+    /**
+     * Apresenta as listagens de enfermarias e episódios ordenados.
+     * Lança exceção se não existirem enfermarias carregadas.
+     *
+     * @throws HospitalException se não existirem enfermarias no hospital
+     */
+    private void mostrarListagensOrdenadas() throws HospitalException {
+        System.out.println("\n--- Listagens Ordenadas ---");
+        validarHospitalNaoVazio();
+
+        LocalDate data = GestorConsola.lerData(leitor, "Data de referencia (AAAA-MM-DD): ");
+        validarData(data);
+
+        System.out.println("\n" + SEPARADOR);
+        System.out.printf("  Enfermarias por Taxa de Ocupacao em %s (decrescente)%n", data);
+        System.out.println(SEPARADOR);
+
+        List<Enfermaria> ordenadas = hospital.listarEnfermariasOrdenadasPorTaxaOcupacao(data);
+        for (Enfermaria enf : ordenadas) {
+            System.out.printf("  %-6s | Taxa: %5.1f%% | %s%n",
+                    enf.getIdentificador(),
+                    enf.getTaxaOcupacao(data),
+                    enf.emPressao(data) ? "Em pressao" : "Estado normal");
+        }
+
+        System.out.println("\n" + SEPARADOR);
+        System.out.println("  Episodios por Enfermaria (ordenados por admissao)");
+        System.out.println(SEPARADOR);
+
+        for (Enfermaria enf : hospital.getEnfermarias()) {
+            System.out.printf("%n  Enfermaria %s:%n", enf.getIdentificador());
+            for (modelo.Episodio ep : enf.getEpisodiosOrdenadosPorAdmissao()) {
+                System.out.println("    " + ep);
+            }
+        }
+    }
+
+
