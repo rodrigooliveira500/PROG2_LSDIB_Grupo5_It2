@@ -4,47 +4,85 @@ import modelo.Hospital;
 import modelo.Enfermaria;
 import java.util.Scanner;
 
+/**
+ * Classe responsável pela apresentação e gestão do menu principal da aplicação.
+ * Liga todas as funcionalidades do sistema, utiliza exceções para tratar
+ * situações inválidas e suporta serialização do estado do hospital.
+ *
+ * @author Grupo 5
+ * @version 2.0
+ */
 public class Menu {
 
-    private static final String SEP  = "=".repeat(60);
-    private static final String LINE = "-".repeat(60);
-
+    private static final String SEPARADOR = "-".repeat(60);
+    private static final int OPCAO_MAXIMA = 9;
     private final Hospital hospital;
     private final Scanner leitor;
     private final LeitorConsola lc;
 
+    /**
+     * Cria um novo menu para o hospital indicado.
+     *
+     * @param hospital hospital a gerir
+     * @param leitor   scanner para leitura da consola
+     */
     public Menu(Hospital hospital, Scanner leitor) {
         this.hospital = hospital;
         this.leitor   = leitor;
-        this.lc       = new LeitorConsola(leitor);
+        this.lc  = new LeitorConsola(leitor);
     }
 
-    public void exibirMenuPrincipal() {
-        boolean running = true;
-        while (running) {
-            printMenu();
-            int op = lerOpcao(0, 9);
-            switch (op) {
-                case 1 -> menuInserirDados();
-                case 2 -> menuTabela();
-                case 3 -> menuAlterarCamas();
-                case 4 -> menuPressao();
-                case 5 -> menuRanking();
-                case 6 -> menuLoS();
-                case 7 -> menuGraficos();
-                case 8 -> menuFicheiros();
-                case 9 -> listarEnfermarias();
-                case 0 -> running = false;
+    public void executar() throws IOException {
+        int opcao = -1;
+        while (opcao != 0) {
+            apresentarMenu();
+            opcao = GestorConsola.lerInteiro(leitor, "Opcao: ", 0, OPCAO_MAXIMA);
+            try {
+                processarOpcao(opcao);
+            } catch (HospitalException e) {
+                System.out.println("[ERRO] " + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Processa a opção escolhida pelo utilizador, delegando para o método correspondente.
+     * Lança {@link HospitalException} se a operação não for possível.
+     *
+     * @param opcao opção escolhida pelo utilizador
+     * @throws HospitalException se ocorrer um erro de negócio
+     * @throws IOException       se ocorrer erro de acesso a ficheiros
+     */
+    private void processarOpcao(int opcao) throws HospitalException, IOException {
+        if (opcao == 1) {
+            carregarCSV();
+        } else if (opcao == 2) {
+            GestorConsola.inserirEnfermaria(leitor, hospital);
+        } else if (opcao == 3) {
+            GestorConsola.inserirEpisodio(leitor, hospital);
+        } else if (opcao == 4) {
+            mostrarIndicadoresOcupacao();
+        } else if (opcao == 5) {
+            analisarPressaoIntervalo();
+        } else if (opcao == 6) {
+            mostrarListagensOrdenadas();
+        } else if (opcao == 7) {
+            alterarCapacidadeEnfermarias();
+        } else if (opcao == 8) {
+            gravarEstado();
+        } else if (opcao == 9) {
+            carregarEstado();
+        } else if (opcao == 0) {
+            System.out.println("\nA sair...");
         }
     }
 
     // ---------- menu principal ----------
 
     private void printMenu() {
-        System.out.println("\n" + SEP);
+        System.out.println("\n" + SEPARADOR);
         System.out.println("  " + hospital.getNome());
-        System.out.println(SEP);
+        System.out.println(SEPARADOR);
         System.out.println("  1. Inserir dados");
         System.out.println("  2. Ver tabela de ocupação");
         System.out.println("  3. Alterar nº de camas (%)");
@@ -55,138 +93,52 @@ public class Menu {
         System.out.println("  8. Guardar / Carregar dados");
         System.out.println("  9. Listar enfermarias");
         System.out.println("  0. Sair");
-        System.out.println(LINE);
-    }
-    /**
-     * Encaminha a opção escolhida para o método correspondente.
-     */
-    // ---------- RF2 - inserir dados ----------
-
-    private void menuInserirDados() {
-        System.out.println("\n" + SEP);
-        System.out.println("  INSERIR DADOS");
-        System.out.println(LINE);
-        System.out.println("  1. Nova enfermaria");
-        System.out.println("  2. Novo episódio");
-        System.out.println("  0. Voltar");
-
-        int op = lerOpcao(0, 2);
-        if (op == 1) novaEnfermaria();
-        else if (op == 2) novoEpisodio();
+        System.out.println(SEPARADOR);
     }
 
+    private void carregarCSV() throws HospitalException, IOException {
+        System.out.println("\n--- Carregar Dados de Ficheiros CSV ---");
+        System.out.print("Diretorio dos ficheiros CSV: ");
+        String diretorio = leitor.nextLine().trim();
 
+        validarDiretorioCSV(diretorio);
 
+        GestorFicheiros.limparLog();
 
+        System.out.println("A carregar enfermarias...");
+        GestorFicheiros.carregarEnfermarias(
+                new File(diretorio, "enfermarias.csv").getPath(), hospital);
+        System.out.println("  Enfermarias carregadas: " + hospital.getEnfermarias().size());
 
-
-    private void novaEnfermaria() {
-
-        System.out.println("\n Tipo:");
-
-        System.out.println(" 1. Geral");
-
-        System.out.println(" 2. Psiquiátrica");
-
-        System.out.println(" 3. Cuidados Intensivos");
-
-
-
-        int tipo = lerOpcao(1, 3);
-
-        try {
-
-            Enfermaria e = switch (tipo) {
-
-                case 1 -> lc.lerEnfermariaGeral();
-
-                case 2 -> lc.lerEnfermariaPsiquiatrica();
-
-                case 3 -> lc.lerEnfermariaCuidadosIntensivos();
-
-                default -> throw new DadosInvalidosException("Tipo inválido.");
-
-            };
-
-
-
-            if (hospital.adicionarEnfermaria(e))
-
-                System.out.println(" Enfermaria '" + e.getIdentificador() + "' adicionada.");
-
-            else
-
-                System.out.println(" Já existe uma enfermaria com esse ID.");
-
-
-
-        } catch (DadosInvalidosException | IllegalArgumentException e) {
-
-            System.out.println(" [ERRO] " + e.getMessage());
-
-        }
-
-    }
-
-
-
-    private void novoEpisodio() {
-
-        Enfermaria enf = selecionarEnfermaria();
-
-        if (enf == null) return;
-
-        try {
-
-            lc.lerEAdicionarEpisodio(enf);
-
-        } catch (DadosInvalidosException | EnfermariaException e) {
-
-            System.out.println(" [ERRO] " + e.getMessage());
-
-        }
-
-    }
-
-
-
-
-
-    /**
-     * Opção 1: Listagem simples de controlo das enfermarias em memória.
-     */
-    private void ejecutarListagemEnfermarias() {
-        System.out.println("\n--- ENFERMARIAS EM MEMÓRIA ---");
-        if (hospital.getEnfermarias().isEmpty()) {
-            System.out.println("Nao existem enfermarias carregadas.");
-            return;
-        }
-        for (Enfermaria enf : hospital.getEnfermarias()) {
-            System.out.println(enf);
-        }
+        System.out.println("A carregar episodios...");
+        GestorFicheiros.carregarEpisodios(
+                new File(diretorio, "episodios.csv").getPath(), hospital);
+        System.out.println("  Consulte 'erros_validacao.log' para entradas rejeitadas.");
     }
 
     /**
-     * Opção 4: Executa o Requisito Funcional 4 (Alterar Capacidade).
+     * Valida se o diretório existe e contém os ficheiros CSV necessários.
+     * Utilizado também nos testes unitários para verificar a lógica de validação.
+     *
+     * @param diretorio caminho do diretório a validar
+     * @throws HospitalException se o diretório não existir ou faltar algum ficheiro CSV
      */
-    private void executarAlterarCapacidade() {
-        System.out.println("\n--- ALTERAR CAPACIDADE DAS ENFERMARIAS (RF4) ---");
-        System.out.print("Introduza a percentagem de alteracao (ex: 10 para aumentar, -5 para diminuir): ");
-
-        try {
-            double percentagem = Double.parseDouble(leitor.nextLine().trim());
-
-            // Invoca o método estático que criámos na classe Enfermaria
-            Enfermaria.alterarCapacidade(hospital.getEnfermarias(), percentagem);
-
-            System.out.println("\n[SUCESSO] Capacidade de todas as enfermarias alterada com sucesso!");
-
-        } catch (NumberFormatException e) {
-            System.out.println("\n[ERRO] Percentagem invalida. Introduza um valor numerico.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("\n[ERRO] Falha na validacao: " + e.getMessage());
+    public static void validarDiretorioCSV(String diretorio) throws HospitalException {
+        if (diretorio == null || diretorio.isBlank()) {
+            throw new HospitalException("O caminho do diretorio nao pode estar vazio.");
         }
-    }
 
+        File pasta = new File(diretorio);
+        if (!pasta.exists() || !pasta.isDirectory()) {
+            throw new HospitalException("O diretorio '" + diretorio + "' nao existe.");
+        }
+
+        if (!new File(pasta, "enfermarias.csv").exists()) {
+            throw new HospitalException("Ficheiro 'enfermarias.csv' nao encontrado em: " + diretorio);
+        }
+
+        if (!new File(pasta, "episodios.csv").exists()) {
+            throw new HospitalException("Ficheiro 'episodios.csv' nao encontrado em: " + diretorio);
+        }
     }
 
