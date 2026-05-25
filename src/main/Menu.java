@@ -4,68 +4,75 @@ import modelo.Hospital;
 import modelo.Enfermaria;
 import java.util.Scanner;
 
-/**
- * Classe responsável pela interface de utilizador e controlo do menu.
- */
 public class Menu {
+
+    private static final String SEP  = "=".repeat(60);
+    private static final String LINE = "-".repeat(60);
 
     private final Hospital hospital;
     private final Scanner leitor;
-    private static final String SEPARADOR = "-".repeat(50);
+    private final LeitorConsola lc;
 
-    /**
-     * Construtor do Menu.
-     *
-     * @param hospital Instância do hospital com os dados carregados
-     * @param leitor   Instância do Scanner partilhada com o Main
-     */
     public Menu(Hospital hospital, Scanner leitor) {
         this.hospital = hospital;
-        this.leitor = leitor;
+        this.leitor   = leitor;
+        this.lc       = new LeitorConsola(leitor);
     }
 
-    /**
-     * Exibe o menu principal e gere o ciclo de escolhas do utilizador.
-     */
     public void exibirMenuPrincipal() {
-        int opcao = -1;
-
-        while (opcao != 0) {
-            System.out.println("\n" + SEPARADOR);
-            System.out.println("                MENU PRINCIPAL");
-            System.out.println(SEPARADOR);
-            System.out.println("1 - Listar Enfermarias (Exemplo)");
-            System.out.println("4 - Alterar Capacidade de Enfermarias (RF4)");
-            System.out.println("0 - Sair");
-            System.out.println(SEPARADOR);
-            System.out.print("Escolha uma opcao: ");
-
-            try {
-                opcao = Integer.parseInt(leitor.nextLine().trim());
-                processarOpcao(opcao);
-            } catch (NumberFormatException e) {
-                System.out.println("\n Por favor, introduza um numero inteiro valido.");
+        boolean running = true;
+        while (running) {
+            printMenu();
+            int op = lerOpcao(0, 9);
+            switch (op) {
+                case 1 -> menuInserirDados();
+                case 2 -> menuTabela();
+                case 3 -> menuAlterarCamas();
+                case 4 -> menuPressao();
+                case 5 -> menuRanking();
+                case 6 -> menuLoS();
+                case 7 -> menuGraficos();
+                case 8 -> menuFicheiros();
+                case 9 -> listarEnfermarias();
+                case 0 -> running = false;
             }
         }
     }
 
+    // ---------- menu principal ----------
+
+    private void printMenu() {
+        System.out.println("\n" + SEP);
+        System.out.println("  " + hospital.getNome());
+        System.out.println(SEP);
+        System.out.println("  1. Inserir dados");
+        System.out.println("  2. Ver tabela de ocupação");
+        System.out.println("  3. Alterar nº de camas (%)");
+        System.out.println("  4. Enfermarias em pressão");
+        System.out.println("  5. Ranking índice de pressão");
+        System.out.println("  6. Estatísticas LoS");
+        System.out.println("  7. Gráficos de barras");
+        System.out.println("  8. Guardar / Carregar dados");
+        System.out.println("  9. Listar enfermarias");
+        System.out.println("  0. Sair");
+        System.out.println(LINE);
+    }
     /**
      * Encaminha a opção escolhida para o método correspondente.
      */
-    private void processarOpcao(int opcao) {
-        switch (opcao) {
-            case 1:
-                executarListagemEnfermarias();
-                break;
-            case 4:
-                executarAlterarCapacidade();
-                break;
-            case 0:
-                System.out.println("\nA sair do menu...");
-                break;
-            default:
-                System.out.println("\n[AVISO] Opcao invalida! Tente novamente.");
-        }
+    // ---------- RF2 - inserir dados ----------
+
+    private void menuInserirDados() {
+        System.out.println("\n" + SEP);
+        System.out.println("  INSERIR DADOS");
+        System.out.println(LINE);
+        System.out.println("  1. Nova enfermaria");
+        System.out.println("  2. Novo episódio");
+        System.out.println("  0. Voltar");
+
+        int op = lerOpcao(0, 2);
+        if (op == 1) novaEnfermaria();
+        else if (op == 2) novoEpisodio();
     }
     /**
      * Opção 1: Listagem simples de controlo das enfermarias em memória.
