@@ -1,6 +1,7 @@
 package utils;
 
 import modelo.Enfermaria;
+import modelo.Episodio;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -193,6 +194,32 @@ public class AnalisadorEstatistico {
                 return primeira.getIdentificador().compareToIgnoreCase(segunda.getIdentificador());
             }
         });
+    }
+
+    /**
+     * Calcula o turnover de uma enfermaria numa data específica.
+     * Fórmula: (admissões + altas) / camasTotais × 100
+     *
+     * @param enfermaria enfermaria a analisar
+     * @param data       data de referência
+     * @return percentagem de turnover; 0.0 se não houver camas
+     */
+    public static double calcularTurnover(Enfermaria enfermaria, LocalDate data) {
+        if (enfermaria == null || data == null) {
+            return 0.0;
+        }
+        int admissoes = 0;
+        int altas     = 0;
+        for (Episodio ep : enfermaria.getEpisodios()) {
+            if (ep.getDataAdmissao().equals(data)) {
+                admissoes++;
+            }
+            if (ep.temAlta() && ep.getDataAlta().equals(data)) {
+                altas++;
+            }
+        }
+        int camas = enfermaria.getNumeroCamas();
+        return camas == 0 ? 0.0 : ((admissoes + altas) * 100.0) / camas;
     }
 }
 
