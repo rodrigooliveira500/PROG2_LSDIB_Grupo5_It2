@@ -20,7 +20,7 @@ import java.util.Scanner;
 /**
  * Classe responsável pela leitura e validação de dados a partir de ficheiros CSV.
  * Os erros de validação são registados no ficheiro {@code erros_validacao.log}.*
- * @author Grupo
+ * @author Grupo 5
  * @version 1.0
  */
 public class GestorFicheiros {
@@ -54,6 +54,8 @@ public class GestorFicheiros {
         escritor.close();
     }
 
+    // Métodos de validação de campos — retornam apenas true/false, sem log
+
     /**
      * Valida se uma string não é nula nem composta apenas por espaços.
      *
@@ -62,24 +64,6 @@ public class GestorFicheiros {
      */
     private static boolean validarString(String valor) {
         return valor != null && !valor.isBlank();
-    }
-
-    /**
-     * Valida se uma string representa um número inteiro válido.
-     *
-     * @param valor string a validar
-     * @return {@code true} se for um inteiro válido, {@code false} caso contrário
-     */
-    private static boolean validarInteiro(String valor) {
-        if (!validarString(valor)) return false;
-        boolean valido = true;
-        char[] caracteres = valor.trim().toCharArray();
-        for (int i = 0; i < caracteres.length; i++) {
-            if (!Character.isDigit(caracteres[i]) && caracteres[i] != '-') {
-                valido = false;
-            }
-        }
-        return valido;
     }
 
     /**
@@ -101,21 +85,38 @@ public class GestorFicheiros {
         }
         return valido && pontos <= 1; // ← lógica corrigida
     }
-
     /**
      * Valida se uma string representa uma data no formato AAAA-MM-DD.
+     * Utiliza o mecanismo de try-catch nativo para validar os componentes numéricos.
      *
      * @param valor string a validar
      * @return {@code true} se for uma data válida, {@code false} caso contrário
      */
     public static boolean validarData(String valor) {
-        if (!validarString(valor)) return false;
+        if (!validarString(valor)) {
+            return false;
+        }
+
         String[] partes = valor.trim().split("-");
-        if (partes.length != 3) return false;
-        if (!validarInteiro(partes[0]) || !validarInteiro(partes[1]) || !validarInteiro(partes[2])) return false;
-        int mes = Integer.parseInt(partes[1]);
-        int dia = Integer.parseInt(partes[2]);
-        return mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31;
+        if (partes.length != 3) {
+            return false;
+        }
+
+        try {
+            // Tenta converter o ano, mes e dia diretamente para inteiros.
+            // Se qualquer uma das partes contiver letras (ex: "202A-05-1X"),
+            // o Java salta imediatamente para o bloco catch lá em baixo!
+            int ano = Integer.parseInt(partes[0]);
+            int mes = Integer.parseInt(partes[1]);
+            int dia = Integer.parseInt(partes[2]);
+
+            // Se a conversão correu bem, aplicas as regras lógicas do calendário.
+            return mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31;
+
+        } catch (NumberFormatException e) {
+            // Se falhou o parse de qualquer número, significa que o formato é inválido
+            return false;
+        }
     }
 
     /**
@@ -133,12 +134,12 @@ public class GestorFicheiros {
      * <p>
      * Formato esperado (separador {@code ;}):
      * <ul>
-     *   <li>GERAL;ID;CAPACIDADE;ACOMPANHANTES[;RECURSO1;RECURSO2;...]</li>
-     *   <li>PSIQUIATRICA;ID;CAPACIDADE;HORARIO;NIVEL_SEGURANCA</li>
-     *   <li>INTENSIVOS;ID;CAPACIDADE;HORARIO;PRESSAO;PRESSAO_REFERENCIA</li>
+     * <li>GERAL;ID;CAPACIDADE;ACOMPANHANTES[;RECURSO1;RECURSO2;...]</li>
+     * <li>PSIQUIATRICA;ID;CAPACIDADE;HORARIO;NIVEL_SEGURANCA</li>
+     * <li>INTENSIVOS;ID;CAPACIDADE;HORARIO;PRESSAO;PRESSAO_REFERENCIA</li>
      * </ul>
      * A primeira linha é tratada como cabeçalho e ignorada.
-     * Entradas inválidas são registadas no ficheiro de log.
+     * Entradas inválidas são registadas no ficheiro de log através do mecanismo de exceções.
      *
      * @param path caminho para o ficheiro CSV das enfermarias
      * @param h    hospital onde as enfermarias serão adicionadas
@@ -151,48 +152,65 @@ public class GestorFicheiros {
         File f = new File(path);
         if (!f.exists()) {
             System.out.println("Ficheiro nao encontrado: " + path);
-        } else {
-            Scanner sc = new Scanner(f);
-            if (sc.hasNextLine()) sc.nextLine();
-
-            int linha = 1;
-            while (sc.hasNextLine()) {
-                linha++;
-                String[] d = sc.nextLine().trim().split(";");
-
-                if (d.length < 3) {
-                    logErro("Linha " + linha + ": campos insuficientes.");
-                } else {
-                    String tipo   = d[0].trim().toUpperCase();
-                    String id     = d[1].trim();
-                    String capStr = d[2].trim();
-
-                    if (!validarString(id)) {
-                        logErro("Linha " + linha + ": identificador invalido.");
-                    } else if (!validarInteiro(capStr)) {
-                        logErro("Linha " + linha + ": capacidade nao e um numero inteiro valido.");
-                    } else {
-                        int cap = Integer.parseInt(capStr);
-                        if (!validarCapacidade(cap)) {
-                            logErro("Linha " + linha + ": capacidade invalida (" + cap + ").");
-                        } else if (tipo.equals("GERAL")) {
-                            processarEnfermariaGeral(d, linha, id, cap, h);
-                        } else if (tipo.equals("PSIQUIATRICA")) {
-                            processarEnfermariaPsiquiatrica(d, linha, id, cap, h);
-                        } else if (tipo.equals("INTENSIVOS")) {
-                            processarEnfermariaCuidadosIntensivos(d, linha, id, cap, h);
-                        } else {
-                            logErro("Linha " + linha + ": tipo desconhecido (" + tipo + ").");
-                        }
-                    }
-                }
-            }
-            sc.close();
+            return;
         }
+
+        Scanner sc = new Scanner(f);
+        if (sc.hasNextLine()) {
+            sc.nextLine(); // Ignora a linha do cabeçalho
+        }
+
+        int linha = 1;
+        while (sc.hasNextLine()) {
+            linha++;
+            String[] d = sc.nextLine().trim().split(";");
+
+            if (d.length < 3) {
+                logErro("Linha " + linha + ": campos insuficientes.");
+                continue; // Avança para a próxima linha
+            }
+
+            String tipo   = d[0].trim().toUpperCase();
+            String id     = d[1].trim();
+            String capStr = d[2].trim();
+
+            if (!validarString(id)) {
+                logErro("Linha " + linha + ": identificador invalido.");
+                continue;
+            }
+
+            try {
+                // Tenta converter diretamente. Se contiver letras ou espaços inválidos,
+                // o Java dispara automaticamente.
+                int cap = Integer.parseInt(capStr);
+
+                if (!validarCapacidade(cap)) {
+                    logErro("Linha " + linha + ": capacidade invalida (" + cap + "). A capacidade deve ser >= 1.");
+                    continue;
+                }
+
+                // Encaminha para os métodos de processamento das subclasses
+                if (tipo.equals("GERAL")) {
+                    processarEnfermariaGeral(d, linha, id, cap, h);
+                } else if (tipo.equals("PSIQUIATRICA")) {
+                    processarEnfermariaPsiquiatrica(d, linha, id, cap, h);
+                } else if (tipo.equals("INTENSIVOS")) {
+                    processarEnfermariaCuidadosIntensivos(d, linha, id, cap, h);
+                } else {
+                    logErro("Linha " + linha + ": tipo desconhecido (" + tipo + ").");
+                }
+
+            } catch (NumberFormatException e) {
+                // Captura nativamente o erro de conversão numérica sem precisar de funções manuais
+                logErro("Linha " + linha + ": capacidade nao e um numero inteiro valido ('" + capStr + "').");
+            }
+        }
+        sc.close();
     }
 
     /**
      * Processa e cria uma {@link EnfermariaGeral} a partir dos campos do CSV.
+     * Utiliza o tratamento de exceções nativo para validar os campos numéricos.
      *
      * @param d       array de campos lidos do CSV
      * @param linha   número da linha no ficheiro (para log)
@@ -205,23 +223,36 @@ public class GestorFicheiros {
                                                  String id, int cap, Hospital h)
             throws IOException {
 
-        if (d.length < 5 || !validarInteiro(d[3].trim())) {
-            logErro("Linha " + linha + ": GERAL requer acompanhantes e horario validos.");
-        } else {
+        if (d.length < 5) {
+            logErro("Linha " + linha + ": GERAL requer campos suficientes (tipo;id;capacidade;acompanhantes;horario).");
+            return;
+        }
+
+        try {
+            // Tenta converter o número de acompanhantes diretamente.
+            // Se falhar (ex: conter letras), o Java dispara o NumberFormatException.
             int acomp = Integer.parseInt(d[3].trim());
+
             if (acomp < 0) {
-                logErro("Linha " + linha + ": numero de acompanhantes nao pode ser negativo.");
+                logErro("Linha " + linha + ": numero de acompanhantes nao pode ser negativo (" + acomp + ").");
             } else if (!validarString(d[4])) {
                 logErro("Linha " + linha + ": horario de visitas em branco.");
             } else {
                 EnfermariaGeral eg = new EnfermariaGeral(id, cap, acomp, d[4].trim());
+
+                // Adiciona os recursos opcionais que possam existir a partir do índice 5
                 for (int i = 5; i < d.length; i++) {
                     if (validarString(d[i])) {
                         eg.adicionarRecurso(d[i].trim());
                     }
                 }
+
                 h.adicionarEnfermaria(eg);
             }
+
+        } catch (NumberFormatException e) {
+            // O catch captura o erro se d[3] não for um número válido, eliminando o validarInteiro
+            logErro("Linha " + linha + ": o numero de acompanhantes nao e um numero inteiro valido ('" + d[3].trim() + "').");
         }
     }
 
