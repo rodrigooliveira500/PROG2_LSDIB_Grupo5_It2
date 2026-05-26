@@ -263,5 +263,19 @@ public class AnalisadorEstatistico {
         }
         return count;
     }
+
+    /**
+     * Calcula o score de ocupação (1-5) com base na taxa de ocupação.
+     *
+     * @param percOcup taxa de ocupação em percentagem
+     * @return score de ocupação entre 1 e 5
+     */
+    private static int calcularScoreOcupacao(double percOcup) {
+        if (percOcup <= 85) return 1;
+        else if (percOcup <= 90) return 2;
+        else if (percOcup <= 95) return 3;
+        else if (percOcup <= 100) return 4;
+        else return 5;
+    }
 }
 

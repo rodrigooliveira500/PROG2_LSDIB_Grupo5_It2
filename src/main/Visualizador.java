@@ -27,4 +27,69 @@ public class Visualizador {
 
     /** Construtor privado — classe utilitária, não deve ser instanciada. */
     private Visualizador() {}
+
+    /**
+     * Repete um caracter n vezes.
+     *
+     * @param c caracter a repetir
+     * @param n número de repetições
+     * @return string resultante
+     */
+    private static String repetir(char c, int n) {
+        if (n <= 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(n);
+        for (int i = 0; i < n; i++) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Trunca uma string ao comprimento máximo indicado.
+     *
+     * @param texto    string a truncar
+     * @param maxChars comprimento máximo
+     * @return string truncada
+     */
+    private static String truncar(String texto, int maxChars) {
+        if (texto == null) {
+            return "";
+        }
+        return texto.length() <= maxChars ? texto : texto.substring(0, maxChars);
+    }
+
+    /**
+     * Devolve o valor máximo de uma lista de doubles.
+     *
+     * @param valores lista de valores
+     * @return valor máximo; 0.0 se a lista for vazia
+     */
+    private static double obterMaximo(List<Double> valores) {
+        if (valores == null || valores.isEmpty()) {
+            return 0.0;
+        }
+        double max = valores.get(0);
+        for (double v : valores) {
+            if (v > max) {
+                max = v;
+            }
+        }
+        return max;
+    }
+
+    /**
+     * Constrói uma barra ASCII proporcional a uma percentagem.
+     * 50 caracteres = 100%.
+     *
+     * @param percentagem valor em percentagem (0–100)
+     * @param simbolo     caracter de preenchimento
+     * @return string com a barra formatada
+     */
+    private static String construirBarra(double percentagem, char simbolo) {
+        double percLimitada = Math.min(percentagem, 100.0);
+        int comprimento = (int) (percLimitada / 100.0 * LARGURA_BARRA);
+        return repetir(simbolo, comprimento) + repetir(' ', LARGURA_BARRA - comprimento);
+    }
 }
