@@ -27,4 +27,22 @@ public class Visualizador {
 
     /** Construtor privado — classe utilitária, não deve ser instanciada. */
     private Visualizador() {}
+
+    /**
+     * Repete um caracter n vezes.
+     *
+     * @param c caracter a repetir
+     * @param n número de repetições
+     * @return string resultante
+     */
+    private static String repetir(char c, int n) {
+        if (n <= 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(n);
+        for (int i = 0; i < n; i++) {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
 }
