@@ -2,7 +2,7 @@ package main;
 
 import exceptions.HospitalException;
 import io.GestorFicheiros;
-import io.GestorSerializacao;
+import menu.GestorConsola;
 import modelo.Enfermaria;
 import modelo.Hospital;
 import utils.AnalisadorEstatistico;
@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
-
 /**
  * Classe responsável pela apresentação e gestão do menu principal da aplicação.
  * Liga todas as funcionalidades do sistema, utiliza exceções para tratar
@@ -143,6 +142,8 @@ public class Menu {
         }
     }
 
+    //Opção 4
+
 /**
  * Apresenta os indicadores de ocupação de todas as enfermarias numa data introduzida.
  * Lança exceção se não existirem enfermarias carregadas.
@@ -155,7 +156,6 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
     validarHospitalNaoVazio();
 
     LocalDate data = GestorConsola.lerData(leitor, "Data de referencia (AAAA-MM-DD): ");
-    validarData(data);
 
     System.out.println("\n" + SEPARADOR);
     System.out.printf("  Ocupacao em %s%n", data);
@@ -339,6 +339,49 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
         System.out.println("Estado carregado com sucesso. Enfermarias: "
                 + hospital.getEnfermarias().size());
     }
+
+    /**
+     * Verifica se o hospital tem pelo menos uma enfermaria carregada.
+     * Método público e estático para ser testável com JUnit.
+     *
+     * @param hospital hospital a verificar
+     * @throws HospitalException se o hospital não tiver enfermarias
+     */
+    public static void validarHospitalNaoVazio(Hospital hospital) throws HospitalException {
+        if (hospital == null || hospital.getEnfermarias().isEmpty()) {
+            throw new HospitalException("Nao existem enfermarias carregadas no hospital.");
+        }
+    }
+
+    /**
+     * Verifica se um intervalo de datas é válido (início não posterior ao fim).
+     * Método público e estático para ser testável com JUnit.
+     *
+     * @param inicio data de início do intervalo
+     * @param fim    data de fim do intervalo
+     * @throws HospitalException se o início for posterior ao fim ou alguma data for nula
+     */
+    public static void validarIntervalo(LocalDate inicio, LocalDate fim) throws HospitalException {
+        if (inicio == null || fim == null) {
+            throw new HospitalException("As datas do intervalo nao podem ser nulas.");
+        }
+        if (inicio.isAfter(fim)) {
+            throw new HospitalException(
+                    "A data de inicio (" + inicio + ") nao pode ser posterior ao fim (" + fim + ").");
+        }
+    }
+
+    /**
+     * Instância do hospital
+     * Permite que os testes injetem um hospital diferente para verificar o comportamento.
+     *
+     * @return hospital atual do menu
+     */
+    public Hospital getHospital() {
+        return hospital;
+    }
+}
+
 
 
 
