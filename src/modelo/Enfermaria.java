@@ -236,4 +236,36 @@ public abstract class Enfermaria implements Analisavel {
 
         return !inicioPrimeiro.isAfter(fimSegundo) && !inicioSegundo.isAfter(fimPrimeiro);
     }
+
+    /**
+     * Conta o número de admissões numa data específica.
+     *
+     * @param data data de referência
+     * @return número de episódios admitidos nessa data
+     */
+    public int getNumeroAdmissoes(LocalDate data) {
+        int count = 0;
+        for (Episodio ep : episodios) {
+            if (ep.getDataAdmissao().equals(data)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Conta o número de altas numa data específica.
+     *
+     * @param data data de referência
+     * @return número de episódios com alta nessa data
+     */
+    public int getNumeroAltas(LocalDate data) {
+        int count = 0;
+        for (Episodio ep : episodios) {
+            if (ep.temAlta() && ep.getDataAlta().equals(data)) {
+                count++;
+            }
+        }
+        return count;
+    }
 }
