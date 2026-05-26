@@ -277,5 +277,17 @@ public class AnalisadorEstatistico {
         else if (percOcup <= 100) return 4;
         else return 5;
     }
+
+    /**
+     * Interpreta o índice de pressão e devolve a classificação.
+     *
+     * @param indice índice de pressão calculado
+     * @return classificação textual do índice
+     */
+    private static String interpretarIndice(double indice) {
+        if (indice <= 2) return "Pressao Baixa";
+        else if (indice <= 3.5) return "Pressao Moderada";
+        else return "Pressao Alta";
+    }
 }
 
