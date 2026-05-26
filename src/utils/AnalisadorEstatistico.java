@@ -279,6 +279,20 @@ public class AnalisadorEstatistico {
     }
 
     /**
+     * Calcula o score de turnover (1-5) com base na percentagem de turnover.
+     *
+     * @param percTurnover percentagem de turnover
+     * @return score de turnover entre 1 e 5
+     */
+    private static int calcularScoreTurnover(double percTurnover) {
+        if (percTurnover <= 10) return 1;
+        else if (percTurnover <= 20) return 2;
+        else if (percTurnover <= 30) return 3;
+        else if (percTurnover <= 40) return 4;
+        else return 5;
+    }
+
+    /**
      * Interpreta o índice de pressão e devolve a classificação.
      *
      * @param indice índice de pressão calculado
