@@ -45,4 +45,37 @@ public class Visualizador {
         }
         return sb.toString();
     }
+
+    /**
+     * Trunca uma string ao comprimento máximo indicado.
+     *
+     * @param texto    string a truncar
+     * @param maxChars comprimento máximo
+     * @return string truncada
+     */
+    private static String truncar(String texto, int maxChars) {
+        if (texto == null) {
+            return "";
+        }
+        return texto.length() <= maxChars ? texto : texto.substring(0, maxChars);
+    }
+
+    /**
+     * Devolve o valor máximo de uma lista de doubles.
+     *
+     * @param valores lista de valores
+     * @return valor máximo; 0.0 se a lista for vazia
+     */
+    private static double obterMaximo(List<Double> valores) {
+        if (valores == null || valores.isEmpty()) {
+            return 0.0;
+        }
+        double max = valores.get(0);
+        for (double v : valores) {
+            if (v > max) {
+                max = v;
+            }
+        }
+        return max;
+    }
 }
