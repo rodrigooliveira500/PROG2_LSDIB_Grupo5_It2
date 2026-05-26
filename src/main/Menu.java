@@ -1,7 +1,16 @@
 package main;
 
-import modelo.Hospital;
+import exceptions.HospitalException;
+import io.GestorFicheiros;
+import io.GestorSerializacao;
 import modelo.Enfermaria;
+import modelo.Hospital;
+import utils.AnalisadorEstatistico;
+
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -15,10 +24,12 @@ import java.util.Scanner;
 public class Menu {
 
     private static final String SEPARADOR = "-".repeat(60);
+
     private static final int OPCAO_MAXIMA = 9;
+
     private final Hospital hospital;
+
     private final Scanner leitor;
-    private final LeitorConsola lc;
 
     /**
      * Cria um novo menu para o hospital indicado.
@@ -29,7 +40,6 @@ public class Menu {
     public Menu(Hospital hospital, Scanner leitor) {
         this.hospital = hospital;
         this.leitor   = leitor;
-        this.lc  = new LeitorConsola(leitor);
     }
 
     public void executar() throws IOException {
@@ -54,26 +64,18 @@ public class Menu {
      * @throws IOException       se ocorrer erro de acesso a ficheiros
      */
     private void processarOpcao(int opcao) throws HospitalException, IOException {
-        if (opcao == 1) {
-            carregarCSV();
-        } else if (opcao == 2) {
-            GestorConsola.inserirEnfermaria(leitor, hospital);
-        } else if (opcao == 3) {
-            GestorConsola.inserirEpisodio(leitor, hospital);
-        } else if (opcao == 4) {
-            mostrarIndicadoresOcupacao();
-        } else if (opcao == 5) {
-            analisarPressaoIntervalo();
-        } else if (opcao == 6) {
-            mostrarListagensOrdenadas();
-        } else if (opcao == 7) {
-            alterarCapacidadeEnfermarias();
-        } else if (opcao == 8) {
-            gravarEstado();
-        } else if (opcao == 9) {
-            carregarEstado();
-        } else if (opcao == 0) {
-            System.out.println("\nA sair...");
+        switch (opcao) {
+            case 1  -> carregarCSV();
+            case 2  -> GestorConsola.inserirEnfermaria(leitor, hospital);
+            case 3  -> GestorConsola.inserirEpisodio(leitor, hospital);
+            case 4  -> mostrarIndicadoresOcupacao();
+            case 5  -> analisarPressaoIntervalo();
+            case 6  -> mostrarListagensOrdenadas();
+            case 7  -> alterarCapacidadeEnfermarias();
+            case 8  -> gravarEstado();
+            case 9  -> carregarEstado();
+            case 0  -> System.out.println("\nA sair... Ate logo!");
+            default -> System.out.println("\n[AVISO] Opcao invalida! Tente novamente.");
         }
     }
 
@@ -175,6 +177,10 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
         System.out.printf("  %s: %s%n", enf.getIdentificador(), sumario);
     }
 }
+
+
+    // OPCAO 5 — Análise de pressão por intervalo
+
     /**
      * Solicita um intervalo de datas e apresenta a análise de pressão diária.
      * Lança exceção se não existirem enfermarias ou se o intervalo for inválido.
@@ -196,6 +202,8 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
             AnalisadorEstatistico.analisarPressaoPorIntervalo(enf, inicio, fim);
         }
     }
+
+    // OPCAO 6 — Listagens ordenadas
 
     /**
      * Apresenta as listagens de enfermarias e episódios ordenados.
@@ -278,5 +286,59 @@ private void mostrarIndicadoresOcupacao() throws HospitalException {
             throw new HospitalException("Percentagem invalida: '" + texto + "'. Introduza um numero.", e);
         }
     }
+
+// OPCAO 8 — Gravar estado (serialização)
+
+    /**
+     * Solicita o caminho do ficheiro e grava o estado do hospital por serialização.
+     * Lança exceção se não existirem dados para gravar ou ocorrer erro de I/O.
+     *
+     * @throws HospitalException se não existirem enfermarias para gravar
+     * @throws IOException       se ocorrer erro na escrita do ficheiro
+     */
+    private void gravarEstado() throws HospitalException, IOException {
+        System.out.println("\n--- Gravar Estado do Hospital ---");
+        validarHospitalNaoVazio();
+
+        System.out.print("Nome do ficheiro de gravacao (ex: hospital.dat): ");
+        String nomeFicheiro = leitor.nextLine().trim();
+
+        if (nomeFicheiro.isBlank()) {
+            throw new HospitalException("O nome do ficheiro nao pode estar vazio.");
+        }
+
+        GestorSerializacao.gravarEstado(hospital, nomeFicheiro);
+        System.out.println("Estado gravado com sucesso em '" + nomeFicheiro + "'.");
+    }
+
+// OPCAO 9 — Carregar estado (deserialização)
+
+    /**
+     * Solicita o caminho do ficheiro e carrega o estado do hospital por deserialização.
+     * Lança exceção se o ficheiro não existir ou ocorrer erro de leitura.
+     *
+     * @throws HospitalException se o ficheiro não existir ou os dados forem inválidos
+     * @throws IOException       se ocorrer erro na leitura do ficheiro
+     */
+    private void carregarEstado() throws HospitalException, IOException {
+        System.out.println("\n--- Carregar Estado do Hospital ---");
+
+        System.out.print("Nome do ficheiro a carregar (ex: hospital.dat): ");
+        String nomeFicheiro = leitor.nextLine().trim();
+
+        if (nomeFicheiro.isBlank()) {
+            throw new HospitalException("O nome do ficheiro nao pode estar vazio.");
+        }
+
+        if (!new File(nomeFicheiro).exists()) {
+            throw new HospitalException("Ficheiro '" + nomeFicheiro + "' nao encontrado.");
+        }
+
+        Hospital hospitalCarregado = GestorSerializacao.carregarEstado(nomeFicheiro);
+        this.hospital = hospitalCarregado;
+        System.out.println("Estado carregado com sucesso. Enfermarias: "
+                + hospital.getEnfermarias().size());
+    }
+
 
 
