@@ -6,7 +6,7 @@ import java.time.temporal.ChronoUnit;
 /**
  * Representa um episódio de internamento.
  */
-public class Episodio implements java.io.Serializable {
+public class Episodio {
     private static final long serialVersionUID = 1L;
 
 
