@@ -78,4 +78,18 @@ public class Visualizador {
         }
         return max;
     }
+
+    /**
+     * Constrói uma barra ASCII proporcional a uma percentagem.
+     * 50 caracteres = 100%.
+     *
+     * @param percentagem valor em percentagem (0–100)
+     * @param simbolo     caracter de preenchimento
+     * @return string com a barra formatada
+     */
+    private static String construirBarra(double percentagem, char simbolo) {
+        double percLimitada = Math.min(percentagem, 100.0);
+        int comprimento = (int) (percLimitada / 100.0 * LARGURA_BARRA);
+        return repetir(simbolo, comprimento) + repetir(' ', LARGURA_BARRA - comprimento);
+    }
 }
