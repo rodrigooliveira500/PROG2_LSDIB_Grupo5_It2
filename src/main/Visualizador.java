@@ -96,6 +96,7 @@ public class Visualizador {
     /**
      * Apresenta tabela alinhada com indicadores diários de ocupação
      * de uma enfermaria num intervalo de datas (RF3).
+     * Inclui barras ASCII horizontais com escala de 50 caracteres = 100%.
      *
      * @param enfermaria enfermaria a analisar
      * @param dataInicio data de início do intervalo (inclusive)
@@ -119,6 +120,27 @@ public class Visualizador {
         System.out.println("-".repeat(110));
         System.out.printf("%-12s %-10s %-8s %-11s %-8s %-10s  Barra (escala: 50 = 100%%)%n",
                 "Enfermaria", "Data", "Ocup.", "Camas Tot.", "%Ocup", "Turnover%");
+        System.out.println("-".repeat(110));
+
+        LocalDate dataAtual = dataInicio;
+        while (!dataAtual.isAfter(dataFim)) {
+            int    ocupadas = enfermaria.getOcupacaoAbsoluta(dataAtual);
+            int    camas    = enfermaria.getNumeroCamas();
+            double percOcup = enfermaria.getTaxaOcupacao(dataAtual);
+            double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, dataAtual);
+            String barra    = construirBarra(percOcup, SIMBOLO_PADRAO);
+
+            System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
+                    enfermaria.getIdentificador(),
+                    dataAtual,
+                    ocupadas,
+                    camas,
+                    percOcup,
+                    turnover,
+                    barra);
+
+            dataAtual = dataAtual.plusDays(1);
+        }
         System.out.println("-".repeat(110));
     }
 }
