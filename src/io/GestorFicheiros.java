@@ -72,19 +72,17 @@ public class GestorFicheiros {
      * @param valor string a validar
      * @return {@code true} se for um decimal válido, {@code false} caso contrário
      */
-    private static boolean validarDecimal(String valor) {
+
+    public static boolean validarDecimal(String valor) {
         if (!validarString(valor)) return false;
-        int pontos = 0;
-        boolean valido = true;
-        for (char c : valor.trim().toCharArray()) {
-            if (c == '.') {
-                pontos++;
-            } else if (!Character.isDigit(c) && c != '-') {
-                valido = false;
-            }
+        try {
+            Double.parseDouble(valor.trim());
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
-        return valido && pontos <= 1; // ← lógica corrigida
     }
+
     /**
      * Valida se uma string representa uma data no formato AAAA-MM-DD.
      * Utiliza o mecanismo de try-catch nativo para validar os componentes numéricos.
@@ -93,28 +91,14 @@ public class GestorFicheiros {
      * @return {@code true} se for uma data válida, {@code false} caso contrário
      */
     public static boolean validarData(String valor) {
-        if (!validarString(valor)) {
-            return false;
-        }
-
-        String[] partes = valor.trim().split("-");
-        if (partes.length != 3) {
-            return false;
-        }
-
+        if (!validarString(valor)) return false;
         try {
-            // Tenta converter o ano, mes e dia diretamente para inteiros.
-            // Se qualquer uma das partes contiver letras (ex: "202A-05-1X"),
-            // o Java salta imediatamente para o bloco catch lá em baixo!
-            int ano = Integer.parseInt(partes[0]);
-            int mes = Integer.parseInt(partes[1]);
-            int dia = Integer.parseInt(partes[2]);
-
-            // Se a conversão correu bem, aplicas as regras lógicas do calendário.
+            String[] p = valor.trim().split("-");
+            if (p.length != 3) return false;
+            int mes = Integer.parseInt(p[1]);
+            int dia = Integer.parseInt(p[2]);
             return mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31;
-
         } catch (NumberFormatException e) {
-            // Se falhou o parse de qualquer número, significa que o formato é inválido
             return false;
         }
     }
@@ -128,6 +112,96 @@ public class GestorFicheiros {
     private static boolean validarCapacidade(int capacidade) {
         return capacidade >= CAPACIDADE_MINIMA;
     }
+
+    // Validação de linhas CSV completas — registam erro no log e retornam false
+
+
+    /**
+     * Valida todos os campos de uma linha CSV de enfermaria.
+     * Verifica os campos base e delega a validação específica para o método do tipo correspondente.
+     *
+     * @param d     campos da linha CSV divididos por {@code ;}
+     * @param linha número da linha no ficheiro (para log)
+     * @return {@code true} se a linha for válida, {@code false} caso contrário
+     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     */
+    public static boolean validarLinhaEnfermaria(String[] d, int linha) throws IOException {
+        if (d.length < 3 || !validarString(d[1])) {
+            logErro("Linha " + linha + ": campos base invalidos (tipo, id).");
+            return false;
+        }
+
+        try {
+            int cap = Integer.parseInt(d[2].trim());
+            if (!validarCapacidade(cap)) {
+                logErro("Linha " + linha + ": capacidade invalida (" + cap + "). Minimo: " + CAPACIDADE_MINIMA + ".");
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            logErro("Linha " + linha + ": capacidade nao e um numero inteiro valido (" + d[2].trim() + ").");
+            return false;
+        }
+
+        String tipo = d[0].trim();
+
+        if (tipo.equals("GERAL"))        return validarCamposGeral(d, linha);
+        if (tipo.equals("PSIQUIATRICA")) return validarCamposPsiquiatrica(d, linha);
+        if (tipo.equals("INTENSIVOS"))   return validarCamposCuidadosIntensivos(d, linha);
+
+        logErro("Linha " + linha + ": tipo desconhecido (" + tipo + ").");
+        return false;
+    }
+
+    /**
+     * Valida os campos específicos de uma linha CSV do tipo GERAL.
+     *
+     * @param d     campos da linha CSV
+     * @param linha número da linha no ficheiro (para log)
+     * @return {@code true} se válida, {@code false} caso contrário
+     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     */
+    private static boolean validarCamposGeral(String[] d, int linha) throws IOException {
+        boolean valido = false;
+        try {
+            valido = d.length >= 5 && Integer.parseInt(d[3].trim()) >= 0 && validarString(d[4]);
+        } catch (NumberFormatException e) {
+            valido = false;
+        }
+        if (!valido) logErro("Linha " + linha + ": GERAL — acompanhantes ou horario invalidos.");
+        return valido;
+    }
+
+    /**
+     * Valida os campos específicos de uma linha CSV do tipo PSIQUIATRICA.
+     *
+     * @param d     campos da linha CSV
+     * @param linha número da linha no ficheiro (para log)
+     * @return {@code true} se válida, {@code false} caso contrário
+     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     */
+    private static boolean validarCamposPsiquiatrica(String[] d, int linha) throws IOException {
+        boolean valido = d.length >= 5 && validarString(d[3]) && validarString(d[4]);
+        if (!valido) logErro("Linha " + linha + ": PSIQUIATRICA — horario ou nivel de seguranca invalidos.");
+        return valido;
+    }
+
+
+    /**
+     * Valida os campos específicos de uma linha CSV do tipo INTENSIVOS.
+     *
+     * @param d     campos da linha CSV
+     * @param linha número da linha no ficheiro (para log)
+     * @return {@code true} se válida, {@code false} caso contrário
+     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     */
+    private static boolean validarCamposCuidadosIntensivos(String[] d, int linha) throws IOException {
+        if (d.length < 6 || !validarString(d[3]) || !validarDecimal(d[4]) || !validarDecimal(d[5])) {
+            logErro("Linha " + linha + ": INTENSIVOS — horario ou pressoes invalidos.");
+            return false;
+        }
+        return true;
+    }
+
 
     /**
      * Carrega enfermarias a partir de um ficheiro CSV e adiciona-as ao hospital.
