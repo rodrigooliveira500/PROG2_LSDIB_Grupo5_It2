@@ -68,16 +68,6 @@ public class EnfermariaCuidadosIntensivos extends Enfermaria {
     }
 
     /**
-     * Devolve o tipo de enfermaria.
-     *
-     * @return tipo de enfermaria
-     */
-    @Override
-    public String getTipoEnfermaria(){
-        return "Cuidados Intensivos";
-    }
-
-    /**
      * Devolve uma representação textual da enfermaria.
      *
      * @return texto com os dados principais

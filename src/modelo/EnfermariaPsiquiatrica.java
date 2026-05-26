@@ -43,12 +43,6 @@ public class EnfermariaPsiquiatrica extends Enfermaria {
         return nivelSeguranca;
     }
 
-
-    @Override
-    public String getTipoEnfermaria() {
-        return "Psiquiatrica";
-    }
-
     /**
      * Retorna uma representação textual da enfermaria psiquiátrica
      *

@@ -83,16 +83,6 @@ public class EnfermariaGeral extends Enfermaria {
   }
 
     /**
-     * Retorna o tipo de enfermaria.
-     *
-     * @return string "Geral" indicando o tipo desta enfermaria
-     */
-    @Override
-    public String getTipoEnfermaria() {
-        return "Geral";
-    }
-
-    /**
    * Retorna uma representação textual da enfermaria geral.
    *
    * @return string com identificador, camas, acaompanhantes e horário de visitas

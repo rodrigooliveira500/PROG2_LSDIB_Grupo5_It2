@@ -60,13 +60,6 @@ public abstract class Enfermaria implements Analisavel, java.io.Serializable {
     }
 
     /**
-     * Devolve o tipo da enfermaria.
-     *
-     * @return tipo da enfermaria
-     */
-    public abstract String getTipoEnfermaria();
-
-    /**
      * Adiciona um episódio à enfermaria.
      *
      * @param episodio episódio a adicionar
@@ -223,8 +216,7 @@ public abstract class Enfermaria implements Analisavel, java.io.Serializable {
      */
     @Override
     public String toString() {
-        return String.format("%s | ID: %s | Camas: %d | Episodios: %d",
-                getTipoEnfermaria(),
+        return String.format("ID: %s | Camas: %d | Episodios: %d",
                 identificador,
                 numeroCamas,
                 episodios.size());
