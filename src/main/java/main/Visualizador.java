@@ -1,7 +1,7 @@
 package main;
 
 import modelo.Enfermaria;
-import main.utils.AnalisadorEstatistico;
+import utils.AnalisadorEstatistico;
 
 import java.time.LocalDate;
 import java.util.List;
