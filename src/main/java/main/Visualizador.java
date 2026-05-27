@@ -1,4 +1,4 @@
-ackage main;
+package main;
 
 import modelo.Enfermaria;
 import utils.AnalisadorEstatistico;
