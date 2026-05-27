@@ -153,4 +153,44 @@ public class Visualizador {
         }
         System.out.println("-".repeat(110));
     }
+
+    /**
+     * Apresenta tabela de ocupação para várias enfermarias numa única data.
+     *
+     * @param enfermarias lista de enfermarias a apresentar
+     * @param data        data de referência
+     */
+    public static void mostrarTabelaOcupacaoMultipla(List<Enfermaria> enfermarias,
+                                                     LocalDate data) {
+        if (enfermarias == null || enfermarias.isEmpty()) {
+            System.out.println("Nenhuma enfermaria disponível.");
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Tabela de Ocupação — " + data);
+        
+        System.out.println(repetir('=', 110));
+        System.out.printf("%-12s %-10s %-8s %-11s %-8s %-10s  Barra (escala: 50 = 100%%)%n",
+                "Enfermaria", "Data", "Ocup.", "Camas Tot.", "%Ocup", "Turnover%");
+        System.out.println(repetir('=', 110));
+
+        for (Enfermaria enfermaria : enfermarias) {
+            int    ocupadas = enfermaria.getOcupacaoAbsoluta(data);
+            int    camas    = enfermaria.getNumeroCamas();
+            double percOcup = enfermaria.getTaxaOcupacao(data);
+            double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, data);
+            String barra    = construirBarra(percOcup, SIMBOLO_PADRAO);
+
+            System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
+                    enfermaria.getIdentificador(),
+                    data,
+                    ocupadas,
+                    camas,
+                    percOcup,
+                    turnover,
+                    barra);
+        }
+        System.out.println(repetir('=', 110));
+    }
 }
