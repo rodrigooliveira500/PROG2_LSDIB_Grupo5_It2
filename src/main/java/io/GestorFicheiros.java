@@ -1,12 +1,12 @@
 
-package main.io;
+package io;
 
-import main.modelo.Hospital;
-import main.modelo.Enfermaria;
-import main.modelo.Episodio;
-import main.modelo.EnfermariaGeral;
-import main.modelo.EnfermariaPsiquiatrica;
-import main.modelo.EnfermariaCuidadosIntensivos;
+import modelo.Hospital;
+import modelo.Enfermaria;
+import modelo.Episodio;
+import modelo.EnfermariaGeral;
+import modelo.EnfermariaPsiquiatrica;
+import modelo.EnfermariaCuidadosIntensivos;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -1,4 +1,4 @@
-package main.modelo;
+package modelo;
 
 /**
  * Representa uma enfermaria de cuidados intensivos.

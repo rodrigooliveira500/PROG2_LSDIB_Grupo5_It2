@@ -1,6 +1,6 @@
-package main.io;
+package io;
 
-import main.modelo.Hospital;
+import modelo.Hospital;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

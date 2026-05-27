@@ -1,4 +1,4 @@
-package main.exceptions;
+package exceptions;
 
 /**
  * Exceção personalizada para erros de negócio da aplicação hospitalar.

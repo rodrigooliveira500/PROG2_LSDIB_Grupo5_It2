@@ -1,7 +1,7 @@
-package main.main;
+package main;
 
-import main.io.GestorFicheiros;
-import main.modelo.Hospital;
+import io.GestorFicheiros;
+import modelo.Hospital;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;

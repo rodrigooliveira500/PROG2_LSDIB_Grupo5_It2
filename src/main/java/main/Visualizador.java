@@ -1,6 +1,6 @@
-package main.main;
+package main;
 
-import main.modelo.Enfermaria;
+import modelo.Enfermaria;
 import main.utils.AnalisadorEstatistico;
 
 import java.time.LocalDate;

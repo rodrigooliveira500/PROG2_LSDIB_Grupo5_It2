@@ -1,11 +1,11 @@
-package main.main;
+package main;
 
-import main.exceptions.HospitalException;
-import main.io.GestorFicheiros;
-import main.modelo.Episodio;
-import menu.GestorConsola;
-import main.modelo.Enfermaria;
-import main.modelo.Hospital;
+import exceptions.HospitalException;
+import io.GestorFicheiros;
+import modelo.Episodio;
+import io.GestorConsola;
+import modelo.Enfermaria;
+import modelo.Hospital;
 import main.utils.AnalisadorEstatistico;
 
 import java.io.File;

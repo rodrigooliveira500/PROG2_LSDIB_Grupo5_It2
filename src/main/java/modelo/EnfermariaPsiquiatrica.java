@@ -1,4 +1,4 @@
-package main.modelo;
+package modelo;
 
 /**
  * Representa uma enfermaria psiquiátrica, com controlo de horário de visitas e nível de segurança.
