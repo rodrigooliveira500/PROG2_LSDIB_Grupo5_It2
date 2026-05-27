@@ -203,83 +203,86 @@ public class GestorFicheiros {
     }
 
 
+        /**
+        * Valida todos os campos de uma linha CSV de episódio.
+         * Método público para ser reutilizável no GestorConsola e testado com JUnit.
+     * @param d        campos da linha CSV divididos por {@code ;}
+     * @param linha    número da linha no ficheiro (para log)
+     * @param hospital hospital com enfermarias carregadas
+     * @return {@code true} se a linha for válida, {@code false} caso contrário
+     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     */
+    public static boolean validarLinhaEpisodio(String[] d, int linha, Hospital hospital) throws IOException {
+        if (d.length < 3 || !validarString(d[0]) || !validarString(d[1]) || !validarData(d[2])) {
+            logErro("Linha " + linha + ": id de enfermaria, id de cama ou data de admissao invalidos.");
+            return false;
+        }
+
+        if (hospital.obterEnfermaria(d[0].trim()) == null) {
+            logErro("Linha " + linha + ": enfermaria nao encontrada (" + d[0].trim() + ").");
+            return false;
+        }
+
+        boolean altaValida = d.length < 4 || !validarString(d[3])
+                || (validarData(d[3]) && LocalDate.parse(d[3].trim()).isAfter(LocalDate.parse(d[2].trim())));
+
+        if (!altaValida) logErro("Linha " + linha + ": data de alta invalida ou anterior/igual a admissao.");
+        return altaValida;
+    }
+
+    // Carregamento de CSV
+
     /**
      * Carrega enfermarias a partir de um ficheiro CSV e adiciona-as ao hospital.
-     * <p>
-     * Formato esperado (separador {@code ;}):
-     * <ul>
-     * <li>GERAL;ID;CAPACIDADE;ACOMPANHANTES[;RECURSO1;RECURSO2;...]</li>
-     * <li>PSIQUIATRICA;ID;CAPACIDADE;HORARIO;NIVEL_SEGURANCA</li>
-     * <li>INTENSIVOS;ID;CAPACIDADE;HORARIO;PRESSAO;PRESSAO_REFERENCIA</li>
-     * </ul>
-     * A primeira linha é tratada como cabeçalho e ignorada.
-     * Entradas inválidas são registadas no ficheiro de log através do mecanismo de exceções.
+     * Cada linha é validada com {@link #validarLinhaEnfermaria} antes de ser processada.
      *
      * @param path caminho para o ficheiro CSV das enfermarias
      * @param h    hospital onde as enfermarias serão adicionadas
-     * @throws IOException           se ocorrer erro ao escrever no ficheiro de log
-     * @throws FileNotFoundException se o ficheiro CSV não for encontrado
+     * @throws IOException se ocorrer erro ao ler o ficheiro ou escrever no ficheiro de log
      */
-    public static void carregarEnfermarias(String path, Hospital h)
-            throws IOException, FileNotFoundException {
-
+    public static void carregarEnfermarias(String path, Hospital h) throws IOException {
         File f = new File(path);
+
         if (!f.exists()) {
             System.out.println("Ficheiro nao encontrado: " + path);
             return;
         }
 
-        Scanner sc = new Scanner(f);
-        if (sc.hasNextLine()) {
-            sc.nextLine(); // Ignora a linha do cabeçalho
-        }
-
-        int linha = 1;
-        while (sc.hasNextLine()) {
-            linha++;
-            String[] d = sc.nextLine().trim().split(";");
-
-            if (d.length < 3) {
-                logErro("Linha " + linha + ": campos insuficientes.");
-                continue; // Avança para a próxima linha
+        try (Scanner sc = new Scanner(f)) {
+            if (sc.hasNextLine()) {
+                sc.nextLine();
             }
 
-            String tipo   = d[0].trim().toUpperCase();
-            String id     = d[1].trim();
-            String capStr = d[2].trim();
+            int linha = 1;
+            while (sc.hasNextLine()) {
+                linha++;
+                String[] d = sc.nextLine().trim().split(";");
 
-            if (!validarString(id)) {
-                logErro("Linha " + linha + ": identificador invalido.");
-                continue;
-            }
-
-            try {
-                // Tenta converter diretamente. Se contiver letras ou espaços inválidos,
-                // o Java dispara automaticamente.
-                int cap = Integer.parseInt(capStr);
-
-                if (!validarCapacidade(cap)) {
-                    logErro("Linha " + linha + ": capacidade invalida (" + cap + "). A capacidade deve ser >= 1.");
-                    continue;
+                if (validarLinhaEnfermaria(d, linha)) {
+                    processarEnfermaria(d, linha, h);
                 }
-
-                // Encaminha para os métodos de processamento das subclasses
-                if (tipo.equals("GERAL")) {
-                    processarEnfermariaGeral(d, linha, id, cap, h);
-                } else if (tipo.equals("PSIQUIATRICA")) {
-                    processarEnfermariaPsiquiatrica(d, linha, id, cap, h);
-                } else if (tipo.equals("INTENSIVOS")) {
-                    processarEnfermariaCuidadosIntensivos(d, linha, id, cap, h);
-                } else {
-                    logErro("Linha " + linha + ": tipo desconhecido (" + tipo + ").");
-                }
-
-            } catch (NumberFormatException e) {
-                // Captura nativamente o erro de conversão numérica sem precisar de funções manuais
-                logErro("Linha " + linha + ": capacidade nao e um numero inteiro valido ('" + capStr + "').");
             }
         }
-        sc.close();
+    }
+
+    /**
+     * Delega o processamento da linha CSV para o método correspondente ao tipo de enfermaria.
+     * Só deve ser chamado após {@link #validarLinhaEnfermaria} retornar {@code true}.
+     *
+     * @param d     array de campos lidos do CSV
+     * @param linha número da linha no ficheiro (para log)
+     * @param h     hospital onde a enfermaria será adicionada
+     */
+    private static void processarEnfermaria(String[] d, int linha, Hospital h) throws IOException {
+        String tipo = d[0].trim();
+        String id   = d[1].trim();
+        int    cap  = Integer.parseInt(d[2].trim());
+
+        switch (tipo) {
+            case "GERAL" -> processarEnfermariaGeral(d, linha, id, cap, h);
+            case "PSIQUIATRICA" -> processarEnfermariaPsiquiatrica(d, linha, id, cap, h);
+            case "INTENSIVOS" -> processarEnfermariaCuidadosIntensivos(d, linha, id, cap, h);
+        }
     }
 
     /**
@@ -378,8 +381,6 @@ public class GestorFicheiros {
         }
     }
 
-
-
     /**
      * Carrega episódios a partir de um ficheiro CSV e associa-os às enfermarias do hospital.
      * Formato esperado: ID_ENFERMARIA;ID_CAMA;DATA_ADMISSAO[;DATA_ALTA]
@@ -399,93 +400,46 @@ public class GestorFicheiros {
             System.out.println("  [AVISO] Ficheiro nao encontrado: " + path);
             return;
         }
+        try (Scanner sc = new Scanner(ficheiro)) {
+            if (sc.hasNextLine()) {
+                sc.nextLine(); // Ignorar o cabeçalho
+            }
 
-        Scanner sc = new Scanner(ficheiro);
+            int linha = 1;
+            while (sc.hasNextLine()) {
+                linha++;
 
-        if (sc.hasNextLine()) {
-            sc.nextLine();
+                // Extrair e separar os campos corretamente
+                String[] d = sc.nextLine().trim().split(";");
+
+                // Barreira de defesa: só processa se a validação passar
+                if (validarLinhaEpisodio(d, linha, hospital)) {
+                    processarEpisodio(d, hospital);
+                }
+            }
         }
-
-        int linha = 1;
-        while (sc.hasNextLine()) {
-            linha++;
-            processarLinhaEpisodio(sc.nextLine(), linha, hospital);
-        }
-        sc.close();
     }
 
     /**
-     * Processa e valida uma linha do CSV de episódios, criando o episódio correspondente.
+     * Processa e cria um episódio a partir dos campos do CSV, associando-o à enfermaria.
+     * Só deve ser chamado após {@link #validarLinhaEpisodio} retornar {@code true}.
      *
-     * @param linhaCsv linha de texto lida do ficheiro CSV
-     * @param linha    número da linha no ficheiro (para log)
+     * @param d        array de campos lidos do CSV
      * @param hospital hospital com as enfermarias já carregadas
-     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
      */
-private static void processarLinhaEpisodio(String linhaCsv, int linha, Hospital hospital) throws IOException {
-    String conteudo = linhaCsv.trim();
-    if (conteudo.isEmpty()) {
-        return;
-    }
+    private static void processarEpisodio(String[] d, Hospital hospital) {
+        Enfermaria enfermaria = hospital.obterEnfermaria(d[0].trim());
+        LocalDate  admissao   = LocalDate.parse(d[2].trim());
+        Episodio   episodio   = new Episodio(d[1].trim(), admissao);
 
-    String[] dados = conteudo.split(";");
-
-    // Barreira, se nao tiver todos os espaços da lista completos da erro
-    if (dados.length < 3) {
-        logErro("Linha " + linha + ": campos insuficientes no episodio.");
-        return;
-    }
-
-    String idEnfermaria = dados[0].trim();
-    String idCama = dados[1].trim();
-    String dataAdmissaoStr = dados[2].trim();
-
-    //Validação de Strings e Formatos dos dados do ficheiro CSV
-    if (!validarString(idEnfermaria)) {
-        logErro("Linha " + linha + ": ID de enfermaria invalido.");
-        return;
-    }
-    if (!validarString(idCama)) {
-        logErro("Linha " + linha + ": ID de cama invalido.");
-        return;
-    }
-    if (!validarData(dataAdmissaoStr)) {
-        logErro("Linha " + linha + ": data de admissao invalida.");
-        return;
-    }
-
-    // Verificar se a enfermaria colocada no ficheiro CSV existe
-    Enfermaria enfermaria = hospital.obterEnfermaria(idEnfermaria);
-    if (enfermaria == null) {
-        logErro("Linha " + linha + ": enfermaria nao encontrada (" + idEnfermaria + ").");
-        return;
-    }
-
-    LocalDate admissao = LocalDate.parse(dataAdmissaoStr);
-    Episodio episodio = new Episodio(idCama, admissao);
-
-    if (dados.length >= 4 && validarString(dados[3])) {
-        String dataAltaStr = dados[3].trim();
-
-        if (!validarData(dataAltaStr)) {
-            logErro("Linha " + linha + ": data de alta invalida.");
-            return;
+        if (d.length >= 4 && validarString(d[3])) {
+            episodio.darAlta(LocalDate.parse(d[3].trim()));
         }
 
-        LocalDate alta = LocalDate.parse(dataAltaStr);
-        if (!alta.isAfter(admissao)) {
-            logErro("Linha " + linha + ": data de alta nao pode ser anterior ou igual a admissao.");
-            return;
-        }
-
-        // Se passou em tudo, damos alta ao episódio
-        episodio.darAlta(alta);
+        enfermaria.adicionarEpisodio(episodio);
     }
-
-    // Independentemente de ter alta ou não, é adicionado à enfermaria.
-    enfermaria.adicionarEpisodio(episodio);
 }
 
-}
+
 
 
