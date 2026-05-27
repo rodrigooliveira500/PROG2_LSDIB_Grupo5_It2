@@ -44,8 +44,7 @@ public class Visualizador {
             sb.append(c);
         }
         return sb.toString();
-    }
-
+        
     /**
      * Trunca uma string ao comprimento máximo indicado.
      *
@@ -57,7 +56,12 @@ public class Visualizador {
         if (texto == null) {
             return "";
         }
-        return texto.length() <= maxChars ? texto : texto.substring(0, maxChars);
+        
+        if (texto.length() <= maxChars) {
+            return texto;
+        } else {
+            return texto.substring(0, maxChars);
+        }
     }
 
     /**
