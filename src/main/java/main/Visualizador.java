@@ -1,4 +1,4 @@
-package main;
+ackage main;
 
 import modelo.Enfermaria;
 import utils.AnalisadorEstatistico;
@@ -88,9 +88,19 @@ public class Visualizador {
      * @return string com a barra formatada
      */
     private static String construirBarra(double percentagem, char simbolo) {
-        double percLimitada = Math.min(percentagem, 100.0);
+        double percLimitada;
+        if (percentagem > 100.0) {
+            percLimitada = 100.0;
+        } else {
+            percLimitada = percentagem;
+        }
+        
         int comprimento = (int) (percLimitada / 100.0 * LARGURA_BARRA);
-        return repetir(simbolo, comprimento) + repetir(' ', LARGURA_BARRA - comprimento);
+        
+        String preenchimento = repetir(simbolo, comprimento);
+        String espacos = repetir(' ', LARGURA_BARRA - comprimento);
+        
+        return preenchimento + espacos;
     }
 
     /**
