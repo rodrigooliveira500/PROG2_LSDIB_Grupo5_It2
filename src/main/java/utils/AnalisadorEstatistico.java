@@ -1,7 +1,7 @@
-package main.utils;
+package utils;
 
-import main.modelo.Enfermaria;
-import main.modelo.Episodio;
+import modelo.Enfermaria;
+import modelo.Episodio;
 
 import java.time.LocalDate;
 import java.util.Comparator;

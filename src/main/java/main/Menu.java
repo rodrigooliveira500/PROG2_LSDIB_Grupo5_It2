@@ -6,7 +6,7 @@ import modelo.Episodio;
 import io.GestorConsola;
 import modelo.Enfermaria;
 import modelo.Hospital;
-import main.utils.AnalisadorEstatistico;
+import utils.AnalisadorEstatistico;
 
 import java.io.File;
 import java.io.IOException;
