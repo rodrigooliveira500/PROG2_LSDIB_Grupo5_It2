@@ -6,6 +6,7 @@ import modelo.Episodio;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Fornece cálculos estatísticos simples.
@@ -276,6 +277,101 @@ public class AnalisadorEstatistico {
         else if (percOcup <= 95) return 3;
         else if (percOcup <= 100) return 4;
         else return 5;
+    }
+
+    /**
+     * Calcula o score de turnover (1-5) com base na percentagem de turnover.
+     *
+     * @param percTurnover percentagem de turnover
+     * @return score de turnover entre 1 e 5
+     */
+    private static int calcularScoreTurnover(double percTurnover) {
+        if (percTurnover <= 10) return 1;
+        else if (percTurnover <= 20) return 2;
+        else if (percTurnover <= 30) return 3;
+        else if (percTurnover <= 40) return 4;
+        else return 5;
+    }
+
+    /**
+     * Interpreta o índice de pressão e devolve a classificação.
+     *
+     * @param indice índice de pressão calculado
+     * @return classificação textual do índice
+     */
+    private static String interpretarIndice(double indice) {
+        if (indice <= 2) return "Pressao Baixa";
+        else if (indice <= 3.5) return "Pressao Moderada";
+        else return "Pressao Alta";
+    }
+
+    /**
+     * Calcula o Índice de Pressão (1-5) para cada enfermaria numa data de referência
+     * e apresenta o ranking por índice decrescente.
+     * Índice = 0.7 x scoreOcupacao + 0.3 x scoreTurnover
+     *
+     * @param enfermarias lista de enfermarias a analisar
+     * @param data        data de referência
+     */
+    public static void calcularIndicePressao(List<Enfermaria> enfermarias, LocalDate data) {
+        if (enfermarias == null || enfermarias.isEmpty()) {
+            System.out.println("Sem enfermarias para analisar.");
+            return;
+        }
+
+        List<Enfermaria> ordenadas = new ArrayList<>(enfermarias);
+        double[] indices = new double[ordenadas.size()];
+
+        for (int i = 0; i < ordenadas.size(); i++) {
+            Enfermaria enf = ordenadas.get(i);
+            double percOcup = enf.getTaxaOcupacao(data);
+            int admissoes = enf.getNumeroAdmissoes(data);
+            int altas = enf.getNumeroAltas(data);
+            double percTurnover = ((double)(admissoes + altas) / enf.getNumeroCamas()) * 100;
+
+            int scoreOcup = calcularScoreOcupacao(percOcup);
+            int scoreTurnover = calcularScoreTurnover(percTurnover);
+            indices[i] = Math.round((0.7 * scoreOcup + 0.3 * scoreTurnover) * 10.0) / 10.0;
+        }
+
+        // ordenar por índice decrescente (bubble sort)
+        for (int i = 0; i < ordenadas.size() - 1; i++) {
+            for (int j = 0; j < ordenadas.size() - 1 - i; j++) {
+                if (indices[j] < indices[j + 1]) {
+                    double tempIndice = indices[j];
+                    indices[j] = indices[j + 1];
+                    indices[j + 1] = tempIndice;
+                    Enfermaria tempEnf = ordenadas.get(j);
+                    ordenadas.set(j, ordenadas.get(j + 1));
+                    ordenadas.set(j + 1, tempEnf);
+                }
+            }
+        }
+
+        System.out.println("\n=== Ranking Indice de Pressao em " + data + " ===");
+        System.out.printf("%-5s %-10s %-8s %-8s %-8s %-8s %-20s%n",
+                "Pos", "Enfermaria", "Ocup%", "Turnover%", "ScOcup", "ScTurn", "Indice | Classificacao");
+        System.out.println("-".repeat(75));
+
+        for (int i = 0; i < ordenadas.size(); i++) {
+            Enfermaria enf = ordenadas.get(i);
+            double percOcup = enf.getTaxaOcupacao(data);
+            int admissoes = enf.getNumeroAdmissoes(data);
+            int altas = enf.getNumeroAltas(data);
+            double percTurnover = ((double)(admissoes + altas) / enf.getNumeroCamas()) * 100;
+            int scoreOcup = calcularScoreOcupacao(percOcup);
+            int scoreTurnover = calcularScoreTurnover(percTurnover);
+
+            System.out.printf("%-5d %-10s %-8.1f %-8.1f %-8d %-8d %.1f | %s%n",
+                    i + 1,
+                    enf.getIdentificador(),
+                    percOcup,
+                    percTurnover,
+                    scoreOcup,
+                    scoreTurnover,
+                    indices[i],
+                    interpretarIndice(indices[i]));
+        }
     }
 }
 
