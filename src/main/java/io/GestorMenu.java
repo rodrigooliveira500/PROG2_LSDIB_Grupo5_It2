@@ -29,12 +29,87 @@ public class GestorMenu {
     private static final String NOME_FICHEIRO_EPISODIOS = "episodios.csv";
 
     private static final String FORMATO_DATA_ESPERADO = "AAAA-MM-DD";
+
+
+
+// MÉTODOS DE ARRANQUE E LEITURA
+
+public static void configurarArranque(Scanner leitor, Hospital hospital) {
+    System.out.println(SEPARADOR);
+    System.out.println("  Arranque do Sistema (Iteracao 2)");
+    System.out.println(SEPARADOR);
+    System.out.println("  1 - Criacao automatica de objetos predefinidos no codigo");
+    System.out.println("  2 - Iniciar o Hospital vazio ");
+    System.out.println(SEPARADOR);
+
+    int escolha = lerInteiro(leitor, "Opcao de arranque: ", 1, 2);
+
+    if (escolha == 1) {
+        System.out.println("A carregar dados predefinidos ...");
+        carregarDadosPredefinidos(hospital);
+        System.out.println("Dados predefinidos carregados com sucesso.");
+    }
 }
 
+    public static int lerInteiro(Scanner leitor, String mensagem, int min, int max) {
+        int valor = 0;
+        boolean entradaValida = false;
+
+        while (!entradaValida) {
+            System.out.print(mensagem);
+            String input = leitor.nextLine();
+
+            try {
+                valor = Integer.parseInt(input);
+
+                if (valor >= min && valor <= max) {
+                    entradaValida = true;
+                } else {
+                    System.out.println("[ERRO] Valor deve estar entre " + min + " e " + max + ".");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("[ERRO] Entrada invalida. Introduza um numero inteiro.");
+            }
+        }
+        return valor;
+    }
+
+    public static double lerDecimal(Scanner leitor, String mensagem) {
+        double valor = 0.0;
+        boolean entradaValida = false;
+
+        while (!entradaValida) {
+            System.out.print(mensagem);
+            String input = leitor.nextLine().replace(',', '.');
+            try {
+                valor = Double.parseDouble(input);
+                entradaValida = true;
+            } catch (NumberFormatException e) {
+                System.out.println("[ERRO] Introduza um numero decimal valido.");
+            }
+        }
+        return valor;
+    }
+
+    public static LocalDate lerData(Scanner leitor, String mensagem) {
+        LocalDate data = null;
+        boolean entradaValida = false;
+
+        while (!entradaValida) {
+            System.out.print(mensagem);
+            String input = leitor.nextLine();
+            try {
+                data = LocalDate.parse(input);
+                entradaValida = true;
+            } catch (DateTimeParseException e) {
+                System.out.println("[ERRO] Formato invalido. Use " + FORMATO_DATA_ESPERADO + ".");
+            }
+        }
+        return data;
+    }
 
 
     // OPÇÕES DO MENU
-    // ---------------------------------------------------------
 
     public static void processarOpcao(int opcao, Scanner leitor, Hospital hospital) throws Exception {
         switch (opcao) {
@@ -110,3 +185,8 @@ public class GestorMenu {
         }
         System.out.println("[SUCESSO] Enfermaria adicionada.");
     }
+
+
+
+
+}
