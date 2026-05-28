@@ -111,21 +111,6 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
 
     // OPÇÕES DO MENU
 
-    public static void processarOpcao(int opcao, Scanner leitor, Hospital hospital) throws Exception {
-        switch (opcao) {
-            case 1  -> carregarCSV(leitor, hospital);
-            case 2  -> inserirEnfermaria(leitor, hospital);
-            case 3  -> inserirEpisodio(leitor, hospital);
-            case 4  -> mostrarIndicadoresOcupacao(leitor, hospital);
-            case 5  -> analisarPressaoIntervalo(leitor, hospital);
-            case 6  -> mostrarListagensOrdenadas(leitor, hospital);
-            case 7  -> alterarCapacidadeEnfermarias(leitor, hospital);
-            case 8  -> gravarEstado(leitor, hospital);
-            case 0  -> System.out.println("\nA sair...");
-            default -> System.out.println("\n[AVISO] Opcao invalida! Tente novamente.");
-        }
-    }
-
     public static void carregarCSV(Scanner leitor, Hospital hospital) throws HospitalException, IOException {
         System.out.println("\n--- Carregar Dados de Ficheiros CSV ---");
         System.out.print("Diretorio dos ficheiros CSV: ");
@@ -135,11 +120,11 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         GestorFicheiros.limparLog();
 
         System.out.println("A carregar enfermarias...");
-        GestorFicheiros.carregarEnfermarias(new File(diretorio, "enfermarias.csv").getPath(), hospital);
+        GestorFicheiros.carregarEnfermarias(new File(diretorio, NOME_FICHEIRO_ENFERMARIAS).getPath(), hospital);
         System.out.println("  Enfermarias carregadas: " + hospital.getEnfermarias().size());
 
         System.out.println("A carregar episodios...");
-        GestorFicheiros.carregarEpisodios(new File(diretorio, "episodios.csv").getPath(), hospital);
+        GestorFicheiros.carregarEpisodios(new File(diretorio, NOME_FICHEIRO_EPISODIOS).getPath(), hospital);
         System.out.println("  Consulte 'erros_validacao.log' para entradas rejeitadas.");
     }
 
@@ -157,7 +142,7 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
             return;
         }
 
-        int capacidade = lerInteiro(leitor, "Capacidade (numero total de camas): ", 1, 1000);
+        int capacidade = lerInteiro(leitor, "Capacidade (numero total de camas): ", 1, CAPACIDADE_MAXIMA_CAMAS);
 
         System.out.println("\nTipos de Enfermaria:");
         System.out.println("  1 - Geral | 2 - Psiquiatrica | 3 - Cuidados Intensivos");
@@ -165,7 +150,7 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
 
         switch (tipo) {
             case 1 -> {
-                int acompanhantes = lerInteiro(leitor, "Numero maximo de acompanhantes: ", 0, 100);
+                int acompanhantes = lerInteiro(leitor, "Numero maximo de acompanhantes: ", 0, MAX_ACOMPANHANTES);
                 System.out.print("Horario de visitas (ex: 14h-18h): ");
                 hospital.adicionarEnfermaria(new modelo.EnfermariaGeral(id, capacidade, acompanhantes, leitor.nextLine()));
             }
@@ -186,6 +171,69 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.println("[SUCESSO] Enfermaria adicionada.");
     }
 
+    public static void inserirEpisodio(Scanner leitor, Hospital hospital) {
+        System.out.println("\n--- Inserir Episodio Manualmente ---");
+        if (hospital.getEnfermarias().isEmpty()) {
+            System.out.println("[ERRO] Nao existem enfermarias no hospital.");
+            return;
+        }
+
+        System.out.print("ID da Enfermaria de destino: ");
+        String idEnfermaria = leitor.nextLine();
+        Enfermaria enfermaria = hospital.obterEnfermaria(idEnfermaria);
+
+        if (enfermaria == null) {
+            System.out.println("[ERRO] Enfermaria nao encontrada.");
+            return;
+        }
+
+        System.out.print("ID da Cama: ");
+        String idCama = leitor.nextLine();
+        LocalDate dataAdmissao = lerData(leitor, "Data de Admissao (" + FORMATO_DATA_ESPERADO + "): ");
+        Episodio episodio = new Episodio(idCama, dataAdmissao);
+
+        System.out.print("O paciente ja teve alta? (S/N): ");
+        String respostaAlta = leitor.nextLine();
+
+        while (!respostaAlta.equals("S") && !respostaAlta.equals("s") && !respostaAlta.equals("N") && !respostaAlta.equals("n")) {
+            System.out.print("[ERRO] Resposta invalida. Responda apenas com S ou N: ");
+            respostaAlta = leitor.nextLine();
+        }
+
+        if (respostaAlta.equals("S") || respostaAlta.equals("s")) {
+            LocalDate dataAlta = lerData(leitor, "Data de Alta (" + FORMATO_DATA_ESPERADO + "): ");
+            if (!dataAlta.isBefore(dataAdmissao)) {
+                episodio.darAlta(dataAlta);
+            } else {
+                System.out.println("[ERRO] Data de alta invalida. Alta ignorada.");
+            }
+        }
+
+        enfermaria.adicionarEpisodio(episodio);
+        System.out.println("[SUCESSO] Episodio adicionado.");
+    }
+
+    public static void mostrarIndicadoresOcupacao(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Tabela de Ocupacao e Graficos ASCII ---");
+        validarHospitalNaoVazio(hospital);
+
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+
+        System.out.println("\nEnfermaria | Data       | Ocupadas/Totais | PercOcup | Grafico de Ocupacao");
+        System.out.println(SEPARADOR_TABELA);
+
+        List<Enfermaria> lista = hospital.getEnfermarias();
+        for (int i = 0; i < lista.size(); i++) {
+            Enfermaria enf = lista.get(i); // Vai buscar a enfermaria na posição i
+
+            int ocupadas = enf.getOcupacaoAbsoluta(data);
+            int totais = enf.getNumeroCamas();
+            double taxa = enf.getTaxaOcupacao(data);
+
+            System.out.printf("%-10s | %-10s | %8d/%-6d | %7.1f%% | %s%n",
+                    enf.getIdentificador(), data.toString(), ocupadas, totais, taxa, gerarBarraAscii(taxa));
+        }
+    }
 
 
 
