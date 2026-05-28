@@ -114,8 +114,44 @@ public abstract class Enfermaria implements Analisavel {
      */
     public List<Episodio> getEpisodiosOrdenadosPorAdmissao() {
         List<Episodio> ordenados = getEpisodios();
-        ordenados.sort(Comparator.comparing(Episodio::getDataAdmissao)
-                .thenComparing(Episodio::getEpisodioId));
+        int n = ordenados.size();
+
+        /** Algoritmo Bubble Sort */
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+
+                Episodio ep1 = ordenados.get(j);
+                Episodio ep2 = ordenados.get(j + 1);
+
+                // 1. Ir buscar as datas e os IDs
+                java.time.LocalDate data1 = ep1.getDataAdmissao();
+                java.time.LocalDate data2 = ep2.getDataAdmissao();
+
+                String id1 = ep1.getEpisodioId();
+                String id2 = ep2.getEpisodioId();
+
+                /** Variável para decidir se devemos trocar os dois de sítio */
+                boolean trocar = false;
+
+                /** Se a data do primeiro for depois da data do segundo, troca */
+                if (data1.isAfter(data2)) {
+                    trocar = true;
+                }
+                /** Se as datas forem exatamente iguais, desempata pelo ID do episódio */
+                else if (data1.equals(data2)) {
+                    if (id1.compareTo(id2) > 0) {
+                        trocar = true;
+                    }
+                }
+
+                /** Código tradicional para trocar dois elementos numa lista */
+                if (trocar) {
+                    ordenados.set(j, ep2);
+                    ordenados.set(j + 1, ep1);
+                }
+            }
+        }
+
         return ordenados;
     }
 

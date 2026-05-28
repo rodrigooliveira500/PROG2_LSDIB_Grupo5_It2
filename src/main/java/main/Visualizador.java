@@ -88,9 +88,19 @@ public class Visualizador {
      * @return string com a barra formatada
      */
     private static String construirBarra(double percentagem, char simbolo) {
-        double percLimitada = Math.min(percentagem, 100.0);
+        double percLimitada;
+        if (percentagem > 100.0) {
+            percLimitada = 100.0;
+        } else {
+            percLimitada = percentagem;
+        }
+        
         int comprimento = (int) (percLimitada / 100.0 * LARGURA_BARRA);
-        return repetir(simbolo, comprimento) + repetir(' ', LARGURA_BARRA - comprimento);
+        
+        String preenchimento = repetir(simbolo, comprimento);
+        String espacos = repetir(' ', LARGURA_BARRA - comprimento);
+        
+        return preenchimento + espacos;
     }
 
     /**
@@ -142,5 +152,45 @@ public class Visualizador {
             dataAtual = dataAtual.plusDays(1);
         }
         System.out.println("-".repeat(110));
+    }
+
+    /**
+     * Apresenta tabela de ocupação para várias enfermarias numa única data.
+     *
+     * @param enfermarias lista de enfermarias a apresentar
+     * @param data        data de referência
+     */
+    public static void mostrarTabelaOcupacaoMultipla(List<Enfermaria> enfermarias,
+                                                     LocalDate data) {
+        if (enfermarias == null || enfermarias.isEmpty()) {
+            System.out.println("Nenhuma enfermaria disponível.");
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Tabela de Ocupação — " + data);
+        
+        System.out.println(repetir('=', 110));
+        System.out.printf("%-12s %-10s %-8s %-11s %-8s %-10s  Barra (escala: 50 = 100%%)%n",
+                "Enfermaria", "Data", "Ocup.", "Camas Tot.", "%Ocup", "Turnover%");
+        System.out.println(repetir('=', 110));
+
+        for (Enfermaria enfermaria : enfermarias) {
+            int    ocupadas = enfermaria.getOcupacaoAbsoluta(data);
+            int    camas    = enfermaria.getNumeroCamas();
+            double percOcup = enfermaria.getTaxaOcupacao(data);
+            double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, data);
+            String barra    = construirBarra(percOcup, SIMBOLO_PADRAO);
+
+            System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
+                    enfermaria.getIdentificador(),
+                    data,
+                    ocupadas,
+                    camas,
+                    percOcup,
+                    turnover,
+                    barra);
+        }
+        System.out.println(repetir('=', 110));
     }
 }
