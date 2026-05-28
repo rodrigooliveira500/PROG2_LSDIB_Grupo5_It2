@@ -13,7 +13,23 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
+
 public class GestorMenu {
+
+    // CONSTANTES DE CONFIGURAÇÃO
+
+    private static final String SEPARADOR = "-".repeat(60);
+    private static final String SEPARADOR_TABELA = "-".repeat(90);
+
+    private static final int CAPACIDADE_MAXIMA_CAMAS = 1000;
+    private static final int MAX_ACOMPANHANTES = 100;
+    private static final int TAMANHO_BARRA_ASCII = 50;
+
+    private static final String NOME_FICHEIRO_ENFERMARIAS = "enfermarias.csv";
+    private static final String NOME_FICHEIRO_EPISODIOS = "episodios.csv";
+
+    private static final String FORMATO_DATA_ESPERADO = "AAAA-MM-DD";
+}
 
 
 
