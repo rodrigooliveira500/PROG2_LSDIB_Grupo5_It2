@@ -81,8 +81,44 @@ public class Hospital {
      */
     public List<Enfermaria> listarEnfermariasOrdenadasPorTaxaOcupacao(LocalDate data) {
         List<Enfermaria> ordenadas = getEnfermarias();
-        ordenadas.sort(Comparator.comparingDouble((Enfermaria e) -> e.getTaxaOcupacao(data)).reversed()
-                .thenComparing(Enfermaria::getIdentificador));
+        int n = ordenadas.size();
+
+        /** Algoritmo Bubble Sort para ordenar as enfermarias */
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+
+                Enfermaria enf1 = ordenadas.get(j);
+                Enfermaria enf2 = ordenadas.get(j + 1);
+
+                /** Ir buscar as taxas de ocupação para a data fornecida */
+                double taxa1 = enf1.getTaxaOcupacao(data);
+                double taxa2 = enf2.getTaxaOcupacao(data);
+
+                /** Ir buscar os identificadores (para o desempate) */
+                String id1 = enf1.getIdentificador();
+                String id2 = enf2.getIdentificador();
+
+                boolean trocar = false;
+
+                /** Se a taxa do primeiro for MENOR que a do segundo, trocamos de sítio */
+                if (taxa1 < taxa2) {
+                    trocar = true;
+                }
+                /** Se as taxas forem iguais, desempatamos por ordem crescente do identificador */
+                else if (taxa1 == taxa2) {
+                    if (id1.compareTo(id2) > 0) {
+                        trocar = true;
+                    }
+                }
+
+                /** Fazer a troca na lista */
+                if (trocar) {
+                    ordenadas.set(j, enf2);
+                    ordenadas.set(j + 1, enf1);
+                }
+            }
+        }
+
         return ordenadas;
     }
 
