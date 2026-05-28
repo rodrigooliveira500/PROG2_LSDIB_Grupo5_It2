@@ -1,115 +1,64 @@
 package main;
 
-import io.GestorFicheiros;
+import io.GestorMenu;
 import modelo.Hospital;
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDate;
+
 import java.util.Scanner;
 
-/**
- * Classe principal da aplicação.
- */
-public class MainHospital {
+public class Main {
 
-    private static final String SEPARADOR = "=".repeat(60);
+    private static final String SEPARADOR = "-".repeat(60);
+    private static final int OPCAO_MAXIMA = 9;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Scanner leitor = new Scanner(System.in);
+        Hospital hospital = new Hospital("Hospital XYZ");
 
-        System.out.println(SEPARADOR);
-        System.out.println("  Hospital XYZ - Sistema de Monitorizacao de Camas");
-        System.out.println(SEPARADOR);
-        System.out.println("\n--- CONFIGURAÇÃO INICIAL (CARREGAMENTO DE DADOS) ---");
+        // Cumpre o requisito de arranque inicial sem sujar o Main
+        GestorMenu.configurarArranque(leitor, hospital);
 
-        // 1. Mantém a tua lógica segura de pedir o diretório dos CSVs
-        String diretorioCsv = lerDiretorioCsv(leitor);
+        int opcao = -1;
 
-        // Inicializa o contentor principal
-        Hospital hospital = new Hospital("Hospital Central XYZ");
-        GestorFicheiros.limparLog();
+        while (opcao != 0) {
+            printMenu(hospital.getNome());
+            // CORREÇÃO: Chama o GestorMenu e não o GestorConsola apagado
+            opcao = GestorMenu.lerInteiro(leitor, "Opcao: ", 0, OPCAO_MAXIMA);
 
-        // 2. Carrega os dados dos ficheiros para a memória
-        System.out.println("A carregar enfermarias do ficheiro CSV...");
-        GestorFicheiros.carregarEnfermarias(construirCaminho(diretorioCsv, "enfermarias.csv"), hospital);
-        System.out.println("     Enfermarias carregadas: " + hospital.getEnfermarias().size());
-
-        System.out.println("A carregar episodios do ficheiro CSV...");
-        GestorFicheiros.carregarEpisodios(construirCaminho(diretorioCsv, "episodios.csv"), hospital);
-        System.out.println("     Configuração concluída com sucesso.");
-        System.out.println(SEPARADOR);
-
-        // 3. Passa o controlo da aplicação para a nova classe Menu (RF1)
-        Menu menu = new Menu(hospital, leitor);
-        menu.exibirMenuPrincipal();
-
-        // Quando o ciclo do menu terminar (opção 0), fecha o leitor
-        leitor.close();
-        System.out.println("\n" + SEPARADOR);
-        System.out.println("  Programa terminado.");
-        System.out.println(SEPARADOR);
-    }
-
-    /**
-     * Lê o diretório onde estão os ficheiros CSV.
-     */
-    public static String lerDiretorioCsv(Scanner leitor) {
-        while (true) {
-            System.out.print("Introduza o diretorio dos CSV: ");
-            String diretorio = leitor.nextLine().trim();
-
-            if (diretorio.isEmpty()) {
-                System.out.println("Diretorio invalido.");
-            } else {
-                File pasta = new File(diretorio);
-                File ficheiroEnfermarias = new File(pasta, "enfermarias.csv");
-                File ficheiroEpisodios = new File(pasta, "episodios.csv");
-
-                if (!pasta.exists() || !pasta.isDirectory()) {
-                    System.out.println("O diretorio indicado nao existe.");
-                } else if (!ficheiroEnfermarias.exists() || !ficheiroEpisodios.exists()) {
-                    System.out.println("O diretorio tem de conter os ficheiros enfermarias.csv e episodios.csv.");
-                } else {
-                    return diretorio;
+            try {
+                switch (opcao) {
+                    case 1  -> GestorMenu.carregarCSV(leitor, hospital);
+                    case 2  -> GestorMenu.inserirEnfermaria(leitor, hospital);
+                    case 3  -> GestorMenu.inserirEpisodio(leitor, hospital);
+                    case 4  -> GestorMenu.mostrarIndicadoresOcupacao(leitor, hospital);
+                    case 5  -> GestorMenu.analisarPressaoIntervalo(leitor, hospital);
+                    case 6  -> GestorMenu.mostrarListagensOrdenadas(leitor, hospital);
+                    case 7  -> GestorMenu.alterarCapacidadeEnfermarias(leitor, hospital);
+                    case 8  -> GestorMenu.gravarEstado(leitor, hospital);
+                    case 9  -> hospital = GestorMenu.carregarEstado(leitor); // Atualiza a variável no Main
+                    case 0  -> System.out.println("\nA sair... Ate logo!");
+                    default -> System.out.println("\n[AVISO] Opcao invalida! Tente novamente.");
                 }
+            } catch (Exception e) {
+                System.out.println("[ERRO] " + e.getMessage());
             }
         }
+        leitor.close();
     }
 
-    /**
-     * Lê uma data introduzida pelo utilizador.
-     */
-    public static LocalDate lerData(Scanner leitor, String mensagem) {
-        while (true) {
-            System.out.print(mensagem);
-            String texto = leitor.nextLine().trim();
-
-            if (GestorFicheiros.validarData(texto)) {
-                return LocalDate.parse(texto);
-            } else {
-                System.out.println("Data invalida. Use o formato AAAA-MM-DD.");
-            }
-        }
-    }
-
-    /**
-     * Lê a data final do intervalo.
-     */
-    public static LocalDate lerDataFim(Scanner leitor, LocalDate dataInicio) {
-        while (true) {
-            LocalDate dataFim = lerData(leitor, "Introduza a data final do intervalo (AAAA-MM-DD): ");
-            if (dataFim.isBefore(dataInicio)) {
-                System.out.println("A data final nao pode ser anterior a data inicial.");
-            } else {
-                return dataFim;
-            }
-        }
-    }
-
-    /**
-     * Constrói o caminho completo de um ficheiro.
-     */
-    public static String construirCaminho(String diretorio, String nomeFicheiro) {
-        return new File(diretorio, nomeFicheiro).getPath();
+    private static void printMenu(String nomeHospital) {
+        System.out.println("\n" + SEPARADOR);
+        System.out.println("  " + nomeHospital + " - Menu Principal");
+        System.out.println(SEPARADOR);
+        System.out.println("  1 - Carregar dados de ficheiros CSV");
+        System.out.println("  2 - Inserir enfermaria manualmente");
+        System.out.println("  3 - Inserir episodio manualmente");
+        System.out.println("  4 - Indicadores de ocupacao (Graficos ASCII)");
+        System.out.println("  5 - Analise de pressao por intervalo");
+        System.out.println("  6 - Listagens ordenadas");
+        System.out.println("  7 - Alterar capacidade das enfermarias (%)");
+        System.out.println("  8 - Gravar estado do hospital");
+        System.out.println("  9 - Carregar estado do hospital");
+        System.out.println("  0 - Sair");
+        System.out.println(SEPARADOR);
     }
 }
