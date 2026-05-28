@@ -193,4 +193,35 @@ public class Visualizador {
         }
         System.out.println(repetir('=', 110));
     }
+
+    // ===================================================================
+    // RF5 — Percentagem de enfermarias em pressão
+    // ===================================================================
+
+    /**
+     * Apresenta a percentagem de enfermarias em pressão
+     * (ocupação > 85%) numa data de referência (RF5).
+     *
+     * @param enfermarias lista de enfermarias
+     * @param data        data de referência
+     */
+    public static void mostrarPercentagemEmPressao(List<Enfermaria> enfermarias,
+                                                   LocalDate data) {
+        if (enfermarias == null || enfermarias.isEmpty()) {
+            System.out.println("Nenhuma enfermaria registada.");
+            return;
+        }
+
+        double percentagem = AnalisadorEstatistico.percentagemEmPressao(enfermarias, data);
+        int    emPressao   = AnalisadorEstatistico.contarEmPressao(enfermarias, data);
+        int    total       = enfermarias.size();
+
+        System.out.println();
+        System.out.println(repetir('=', 60));
+        System.out.println("  Enfermarias em Pressão — " + data);
+        System.out.println(repetir('=', 60));
+        System.out.printf("  Em pressão (ocup. > 85%%): %d de %d  ->  %.1f%%%n",
+                emPressao, total, percentagem);
+        System.out.println(repetir('=', 60));
+    }
 }
