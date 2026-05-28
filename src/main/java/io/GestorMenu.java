@@ -80,12 +80,13 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
 
         while (!entradaValida) {
             System.out.print(mensagem);
-            String input = leitor.nextLine().replace(',', '.');
+            String input = leitor.nextLine();
+
             try {
                 valor = Double.parseDouble(input);
                 entradaValida = true;
             } catch (NumberFormatException e) {
-                System.out.println("[ERRO] Introduza um numero decimal valido.");
+                System.out.println("[ERRO] Introduza um numero decimal valido (use ponto '.' em vez de virgula).");
             }
         }
         return valor;
@@ -234,6 +235,76 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
                     enf.getIdentificador(), data.toString(), ocupadas, totais, taxa, gerarBarraAscii(taxa));
         }
     }
+
+    public static void analisarPressaoIntervalo(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Analise de Pressao por Intervalo ---");
+        validarHospitalNaoVazio(hospital);
+
+        LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
+        LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
+        validarIntervalo(inicio, fim);
+
+        List<Enfermaria> lista = hospital.getEnfermarias();
+        for (int i = 0; i < lista.size(); i++) {
+            Enfermaria enf = lista.get(i);
+            System.out.printf("%nEnfermaria %s:%n", enf.getIdentificador());
+            AnalisadorEstatistico.analisarPressaoPorIntervalo(enf, inicio, fim);
+        }
+    }
+
+    public static void mostrarListagensOrdenadas(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Listagens Ordenadas ---");
+        validarHospitalNaoVazio(hospital);
+
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+
+        System.out.println("\nEnfermarias por Taxa de Ocupacao (decrescente):");
+
+        List<Enfermaria> ordenadas = hospital.listarEnfermariasOrdenadasPorTaxaOcupacao(data);
+        for (int i = 0; i < ordenadas.size(); i++) {
+            Enfermaria enf = ordenadas.get(i);
+            System.out.printf("  %-6s | Taxa: %5.1f%% | %s%n",
+                    enf.getIdentificador(), enf.getTaxaOcupacao(data), enf.emPressao(data) ? "Em pressao" : "Normal");
+        }
+    }
+
+    public static void alterarCapacidadeEnfermarias(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Alterar Capacidade das Enfermarias ---");
+        validarHospitalNaoVazio(hospital);
+
+        // O lerDecimal já garante que o valor devolvido é um double válido, lidando com os try-catch internamente
+        double percentagem = lerDecimal(leitor, "Percentagem de variacao (ex: 10 para +10%, -20.5 para -20.5%): ");
+
+        Enfermaria.alterarCapacidade(hospital.getEnfermarias(), percentagem);
+        System.out.printf("Capacidade ajustada em %.1f%%.%n", percentagem);
+    }
+
+    public static void gravarEstado(Scanner leitor, Hospital hospital) throws HospitalException, IOException {
+        System.out.println("\n--- Gravar Estado do Hospital ---");
+        validarHospitalNaoVazio(hospital);
+
+        System.out.print("Nome do ficheiro de gravacao (ex: hospital.dat): ");
+        String ficheiro = leitor.nextLine();
+        if (ficheiro.isEmpty()) throw new HospitalException("O nome do ficheiro nao pode estar vazio.");
+
+        GestorSerializacao.gravarEstado(hospital, ficheiro);
+        System.out.println("Estado gravado com sucesso.");
+    }
+
+    public static Hospital carregarEstado(Scanner leitor) throws HospitalException, IOException {
+        System.out.println("\n--- Carregar Estado do Hospital ---");
+        System.out.print("Nome do ficheiro a carregar (ex: hospital.dat): ");
+        String ficheiro = leitor.nextLine();
+
+        if (ficheiro.isEmpty() || !new File(ficheiro).exists()) {
+            throw new HospitalException("Ficheiro invalido ou nao encontrado.");
+        }
+
+        Hospital hospitalCarregado = GestorSerializacao.carregarEstado(ficheiro);
+        System.out.println("Estado carregado com sucesso. Enfermarias: " + hospitalCarregado.getEnfermarias().size());
+        return hospitalCarregado;
+    }
+
 
 
 
