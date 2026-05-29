@@ -200,7 +200,7 @@ public class Visualizador {
 
     /**
      * Apresenta a percentagem de enfermarias em pressão
-     * (ocupação > 85%) numa data de referência (RF5).
+     * (ocupação > 85%) numa data de referência, com detalhe por enfermaria (RF5).
      *
      * @param enfermarias lista de enfermarias
      * @param data        data de referência
@@ -222,6 +222,21 @@ public class Visualizador {
         System.out.println(repetir('=', 60));
         System.out.printf("  Em pressão (ocup. > 85%%): %d de %d  ->  %.1f%%%n",
                 emPressao, total, percentagem);
+        System.out.println();
+        System.out.println("  Detalhe:");
+        for (Enfermaria e : enfermarias) {
+            double taxa = e.getTaxaOcupacao(data);
+            
+            String estado;
+            if (e.emPressao(data)) {
+                estado = "EM PRESSAO  !";
+            } else {
+                estado = "Normal";
+            }
+            
+            System.out.printf("    %-12s  %5.1f%%  %s%n",
+                    e.getIdentificador(), taxa, estado);
+        }
         System.out.println(repetir('=', 60));
     }
 }
