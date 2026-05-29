@@ -230,25 +230,26 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         String s     = leitor.nextLine().trim();
         char simbolo = s.isEmpty() ? '#' : s.charAt(0);
 
-        if (op == 1) {
+        if (op == 1)
             System.out.print("ID da enfermaria: ");
             String id    = leitor.nextLine().trim();
-            LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA + "): ");
-            LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA + "): ");
+            LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
+            LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
             validarIntervalo(inicio, fim);
             hospital.exibirTabelaHorizontal(id, inicio, fim, simbolo);
         } else {
-            LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA + "): ");
+            LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO:FORMATO_DATA_ESPERADO + "): ");
             if (op == 2)
                 hospital.exibirBarrasHorizontais(data, simbolo);
             else
                 hospital.exibirBarrasVerticais(data, simbolo);
         }
-    }
+
 
     public static void analisarPressaoIntervalo(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Analise de Pressao por Intervalo ---");
         validarHospitalNaoVazio(hospital);
+
 
         LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
         LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
@@ -289,6 +290,82 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.printf("Capacidade ajustada em %.1f%%.%n", percentagem);
     }
 
+    // RF5 — percentagem de enfermarias em pressao
+    public static void mostrarEnfermariasEmPressao(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Enfermarias em Pressao ---");
+        validarHospitalNaoVazio(hospital);
+
+        LocalDate data         = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        List<Enfermaria> lista = hospital.getEnfermarias();
+
+        int emPressao = 0;
+        for (Enfermaria enf : lista) {
+            if (enf.getTaxaOcupacao(data) > LIMIAR_PRESSAO) emPressao++;
+        }
+        double percentagem = lista.isEmpty() ? 0.0 : (emPressao * 100.0) / lista.size();
+
+        System.out.printf("%nData: %s | Total: %d | Em pressao (>%.0f%%): %.1f%%%n%n",
+                data, lista.size(), LIMIAR_PRESSAO, percentagem);
+
+        for (Enfermaria enf : lista) {
+            System.out.printf("  %-12s | %.1f%% | %s%n",
+                    enf.getIdentificador(),
+                    enf.getTaxaOcupacao(data),
+                    enf.emPressao(data) ? "EM PRESSAO" : "Normal");
+        }
+    }
+
+
+    // RF6 — ranking indice de pressao
+    public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Ranking Indice de Pressao ---");
+        validarHospitalNaoVazio(hospital);
+
+        LocalDate data         = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        List<Enfermaria> lista = hospital.getEnfermarias();
+
+        // calcula e guarda os indices numa lista paralela
+        List<double[]> indices = new ArrayList<>();
+        for (Enfermaria enf : lista) {
+            double percOcup     = enf.getTaxaOcupacao(data);
+            double percTurnover = enf.getPercTurnover(data);
+            int scoreOcup       = calcularScoreOcupacao(percOcup);
+            int scoreTurnover   = calcularScoreTurnover(percTurnover);
+            double indice       = Math.round((0.7 * scoreOcup + 0.3 * scoreTurnover) * 10.0) / 10.0;
+            indices.add(new double[]{indice, percOcup, percTurnover});
+        }
+
+        // ordena por indice decrescente (bubble sort)
+        for (int i = 0; i < lista.size() - 1; i++) {
+            for (int j = 0; j < lista.size() - i - 1; j++) {
+                if (indices.get(j)[0] < indices.get(j + 1)[0]) {
+                    double[] tempD = indices.get(j);
+                    indices.set(j, indices.get(j + 1));
+                    indices.set(j + 1, tempD);
+
+                    Enfermaria tempE = lista.get(j);
+                    lista.set(j, lista.get(j + 1));
+                    lista.set(j + 1, tempE);
+                }
+            }
+        }
+
+        System.out.println();
+        System.out.printf("%-4s %-12s %-8s %-18s %-10s %-10s%n",
+                "Pos", "Enfermaria", "Indice", "Classificacao", "Ocup%", "Turnover%");
+        System.out.println("-".repeat(70));
+
+        for (int i = 0; i < lista.size(); i++) {
+            double indice = indices.get(i)[0];
+            System.out.printf("%-4d %-12s %-8.1f %-18s %-10.1f %-10.1f%n",
+                    i + 1,
+                    lista.get(i).getIdentificador(),
+                    indice,
+                    interpretarIndice(indice),
+                    indices.get(i)[1],
+                    indices.get(i)[2]);
+        }
+    }
 
 
     // RF7 — serialização
