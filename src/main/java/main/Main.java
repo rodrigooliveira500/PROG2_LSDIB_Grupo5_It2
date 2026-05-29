@@ -12,9 +12,8 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner leitor = new Scanner(System.in);
-        Hospital hospital = new Hospital("Hospital XYZ");
 
-        GestorMenu.configurarArranque(leitor, hospital);
+        Hospital hospital = GestorMenu.configurarArranque(leitor, "Hospital XYZ");
 
         int opcao;
         do {

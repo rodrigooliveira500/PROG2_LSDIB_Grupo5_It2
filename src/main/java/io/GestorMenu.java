@@ -33,22 +33,39 @@ public class GestorMenu {
 
 // MÉTODOS DE ARRANQUE E LEITURA
 
-public static void configurarArranque(Scanner leitor, Hospital hospital) {
-    System.out.println(SEPARADOR);
-    System.out.println("  Arranque do Sistema (Iteracao 2)");
-    System.out.println(SEPARADOR);
-    System.out.println("  1 - Criacao automatica de objetos predefinidos no codigo");
-    System.out.println("  2 - Iniciar o Hospital vazio ");
-    System.out.println(SEPARADOR);
+    public static Hospital configurarArranque(Scanner leitor, String nomeHospital) {
+        System.out.println(SEPARADOR);
+        System.out.println("  Arranque do Sistema (Iteracao 2)");
+        System.out.println(SEPARADOR);
+        System.out.println("  1 - Criacao automatica de objetos predefinidos no codigo");
+        System.out.println("  2 - Iniciar o Hospital vazio");
+        System.out.println("  3 - Carregar estado do hospital (.dat)");
+        System.out.println(SEPARADOR);
 
-    int escolha = lerInteiro(leitor, "Opcao de arranque: ", 1, 2);
+        int escolha = lerInteiro(leitor, "Opcao de arranque: ", 1, 3);
 
-    if (escolha == 1) {
-        System.out.println("A carregar dados predefinidos ...");
-        carregarDadosPredefinidos(hospital);
-        System.out.println("Dados predefinidos carregados com sucesso.");
+        // Criamos um hospital base vazio primeiro
+        Hospital hospital = new Hospital(nomeHospital);
+
+        if (escolha == 1) {
+            System.out.println("A carregar dados predefinidos...");
+            carregarDadosPredefinidos(hospital);
+            System.out.println("Dados predefinidos carregados com sucesso.");
+
+        } else if (escolha == 3) {
+            try {
+                // Reutilizamos o método da Opção 11. Se correr bem, substitui a variável.
+                hospital = carregarEstado(leitor);
+            } catch (Exception e) {
+                System.out.println("[ERRO] Falha ao carregar ficheiro binario: " + e.getMessage());
+                System.out.println("A arrancar com o hospital vazio por seguranca.");
+            }
+        }
+
+        // Se escolheu 2, devolve o hospital vazio criado ali em cima.
+        return hospital;
     }
-}
+
 
     // LEITURA DE INPUT
 
