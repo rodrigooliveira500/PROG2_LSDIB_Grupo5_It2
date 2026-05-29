@@ -20,14 +20,11 @@ public class GestorMenu {
 
     private static final String SEPARADOR = "-".repeat(60);
     private static final String SEPARADOR_TABELA = "-".repeat(90);
-
     private static final int CAPACIDADE_MAXIMA_CAMAS = 1000;
     private static final int MAX_ACOMPANHANTES = 100;
     private static final int TAMANHO_BARRA_ASCII = 50;
-
     private static final String NOME_FICHEIRO_ENFERMARIAS = "enfermarias.csv";
     private static final String NOME_FICHEIRO_EPISODIOS = "episodios.csv";
-
     private static final String FORMATO_DATA_ESPERADO = "AAAA-MM-DD";
 
 
@@ -50,6 +47,9 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.println("Dados predefinidos carregados com sucesso.");
     }
 }
+
+    // LEITURA DE INPUT
+
 
     public static int lerInteiro(Scanner leitor, String mensagem, int min, int max) {
         int valor = 0;
@@ -214,25 +214,35 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.println("[SUCESSO] Episodio adicionado.");
     }
 
-    public static void mostrarIndicadoresOcupacao(Scanner leitor, Hospital hospital) throws HospitalException {
-        System.out.println("\n--- Tabela de Ocupacao e Graficos ASCII ---");
+
+
+    // RF3 + RF8 — gráficos de ocupacao (tabela + barras ASCII)
+    public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Graficos de Ocupacao ---");
         validarHospitalNaoVazio(hospital);
 
-        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        System.out.println("  1 - Tabela detalhada (enfermaria + intervalo de datas)");
+        System.out.println("  2 - Barras horizontais (todas as enfermarias, uma data)");
+        System.out.println("  3 - Barras verticais   (todas as enfermarias, uma data)");
+        int op = lerInteiro(leitor, "Tipo: ", 1, 3);
 
-        System.out.println("\nEnfermaria | Data       | Ocupadas/Totais | PercOcup | Grafico de Ocupacao");
-        System.out.println(SEPARADOR_TABELA);
+        System.out.print("Simbolo da barra (Enter = '#'): ");
+        String s     = leitor.nextLine().trim();
+        char simbolo = s.isEmpty() ? '#' : s.charAt(0);
 
-        List<Enfermaria> lista = hospital.getEnfermarias();
-        for (int i = 0; i < lista.size(); i++) {
-            Enfermaria enf = lista.get(i); // Vai buscar a enfermaria na posição i
-
-            int ocupadas = enf.getOcupacaoAbsoluta(data);
-            int totais = enf.getNumeroCamas();
-            double taxa = enf.getTaxaOcupacao(data);
-
-            System.out.printf("%-10s | %-10s | %8d/%-6d | %7.1f%% | %s%n",
-                    enf.getIdentificador(), data.toString(), ocupadas, totais, taxa, gerarBarraAscii(taxa));
+        if (op == 1) {
+            System.out.print("ID da enfermaria: ");
+            String id    = leitor.nextLine().trim();
+            LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA + "): ");
+            LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA + "): ");
+            validarIntervalo(inicio, fim);
+            hospital.exibirTabelaHorizontal(id, inicio, fim, simbolo);
+        } else {
+            LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA + "): ");
+            if (op == 2)
+                hospital.exibirBarrasHorizontais(data, simbolo);
+            else
+                hospital.exibirBarrasVerticais(data, simbolo);
         }
     }
 
@@ -256,18 +266,18 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.println("\n--- Listagens Ordenadas ---");
         validarHospitalNaoVazio(hospital);
 
-        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA + "): ");
 
         System.out.println("\nEnfermarias por Taxa de Ocupacao (decrescente):");
-
-        List<Enfermaria> ordenadas = hospital.listarEnfermariasOrdenadasPorTaxaOcupacao(data);
-        for (int i = 0; i < ordenadas.size(); i++) {
-            Enfermaria enf = ordenadas.get(i);
-            System.out.printf("  %-6s | Taxa: %5.1f%% | %s%n",
-                    enf.getIdentificador(), enf.getTaxaOcupacao(data), enf.emPressao(data) ? "Em pressao" : "Normal");
+        for (Enfermaria enf : hospital.listarEnfermariasOrdenadasPorTaxaOcupacao(data)) {
+            System.out.printf("  %-10s | Taxa: %5.1f%% | %s%n",
+                    enf.getIdentificador(),
+                    enf.getTaxaOcupacao(data),
+                    enf.emPressao(data) ? "Em pressao" : "Normal");
         }
     }
 
+    // RF4 — alterar capacidade (chama método static de IndicePressao)
     public static void alterarCapacidadeEnfermarias(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Alterar Capacidade das Enfermarias ---");
         validarHospitalNaoVazio(hospital);
@@ -279,6 +289,9 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.printf("Capacidade ajustada em %.1f%%.%n", percentagem);
     }
 
+
+
+    // RF7 — serialização
     public static void gravarEstado(Scanner leitor, Hospital hospital) throws HospitalException, IOException {
         System.out.println("\n--- Gravar Estado do Hospital ---");
         validarHospitalNaoVazio(hospital);
@@ -305,7 +318,8 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         return hospitalCarregado;
     }
 
-
-
-
 }
+
+
+
+

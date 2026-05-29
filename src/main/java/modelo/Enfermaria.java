@@ -304,4 +304,39 @@ public abstract class Enfermaria implements Analisavel {
         }
         return count;
     }
+
+
+
+
+// METODOS 2 ITERAÇÃO
+
+/**
+ * Altera a capacidade de todas as enfermarias do hospital com base numa percentagem.
+ *
+ * @param enfermarias lista de enfermarias a processar
+ * @param percentagem valor percentual de alteracao (ex: 10 para +10%, -20 para -20%)
+ */
+public static void alterarCapacidade(List<Enfermaria> enfermarias, double percentagem) {
+    if (enfermarias == null || enfermarias.isEmpty()) {
+        return;
+    }
+
+    for (int i = 0; i < enfermarias.size(); i++) {
+        Enfermaria enf = enfermarias.get(i);
+        int capacidadeAtual = enf.getNumeroCamas();
+
+        // Calcula a diferenca e arredonda para não termos "meias camas"
+        int variacao = (int) Math.round(capacidadeAtual * (percentagem / 100.0));
+        int novaCapacidade = capacidadeAtual + variacao;
+
+        // Blindagem: Uma enfermaria tem de ter, no mínimo, 1 cama.
+        if (novaCapacidade < 1) {
+            novaCapacidade = 1;
+        }
+
+        // Como o metodo esta dentro da propria classe, pode aceder ao atributo privado diretamente
+        enf.numeroCamas = novaCapacidade;
+    }
+}
+
 }
