@@ -26,6 +26,8 @@ public class GestorMenu {
     private static final String NOME_FICHEIRO_ENFERMARIAS = "enfermarias.csv";
     private static final String NOME_FICHEIRO_EPISODIOS = "episodios.csv";
     private static final String FORMATO_DATA_ESPERADO = "AAAA-MM-DD";
+    private static final double LIMIAR_PRESSAO         = 85.0;
+
 
 
 
@@ -110,8 +112,9 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
     }
 
 
-    // OPÇÕES DO MENU
+    // OPÇÕES DO MENU (1 a 11)
 
+    // OPÇÃO 1
     public static void carregarCSV(Scanner leitor, Hospital hospital) throws HospitalException, IOException {
         System.out.println("\n--- Carregar Dados de Ficheiros CSV ---");
         System.out.print("Diretorio dos ficheiros CSV: ");
@@ -129,6 +132,7 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.println("  Consulte 'erros_validacao.log' para entradas rejeitadas.");
     }
 
+    // OPÇÃO 2
     public static void inserirEnfermaria(Scanner leitor, Hospital hospital) {
         System.out.println("\n--- Inserir Enfermaria Manualmente ---");
         System.out.print("Introduza o nome/ID da enfermaria: ");
@@ -172,6 +176,7 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         System.out.println("[SUCESSO] Enfermaria adicionada.");
     }
 
+    // OPÇÃO 3
     public static void inserirEpisodio(Scanner leitor, Hospital hospital) {
         System.out.println("\n--- Inserir Episodio Manualmente ---");
         if (hospital.getEnfermarias().isEmpty()) {
@@ -215,37 +220,44 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
     }
 
 
-
+// Opção 4
     // RF3 + RF8 — gráficos de ocupacao (tabela + barras ASCII)
-    public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) throws HospitalException {
-        System.out.println("\n--- Graficos de Ocupacao ---");
-        validarHospitalNaoVazio(hospital);
+public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) throws HospitalException {
+    System.out.println("\n--- Graficos de Ocupacao (ASCII) ---");
+    validarHospitalNaoVazio(hospital);
 
-        System.out.println("  1 - Tabela detalhada (enfermaria + intervalo de datas)");
-        System.out.println("  2 - Barras horizontais (todas as enfermarias, uma data)");
-        System.out.println("  3 - Barras verticais   (todas as enfermarias, uma data)");
-        int op = lerInteiro(leitor, "Tipo: ", 1, 3);
+    System.out.println("\nEscolha o formato do grafico:");
+    System.out.println("  1 - Tabela de Evolucao (1 Enfermaria, Intervalo de datas)");
+    System.out.println("  2 - Barras Horizontais (Todas as enfermarias, 1 Data)");
+    System.out.println("  3 - Barras Verticais   (Todas as enfermarias, 1 Data)");
 
-        System.out.print("Simbolo da barra (Enter = '#'): ");
-        String s     = leitor.nextLine().trim();
-        char simbolo = s.isEmpty() ? '#' : s.charAt(0);
+    int tipo = lerInteiro(leitor, "Opcao (1-3): ", 1, 3);
 
-        if (op == 1)
-            System.out.print("ID da enfermaria: ");
-            String id    = leitor.nextLine().trim();
-            LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
-            LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
-            validarIntervalo(inicio, fim);
-            hospital.exibirTabelaHorizontal(id, inicio, fim, simbolo);
-        } else {
-            LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO:FORMATO_DATA_ESPERADO + "): ");
-            if (op == 2)
-                hospital.exibirBarrasHorizontais(data, simbolo);
-            else
-                hospital.exibirBarrasVerticais(data, simbolo);
-        }
+    System.out.print("Simbolo para preencher o grafico (ex: #, *, =): ");
+    String inputSimbolo = leitor.nextLine();
 
+     // Se o utilizador der apenas 'Enter', usa '#' por defeito
+    char simbolo = inputSimbolo.isEmpty() ? '#' : inputSimbolo.charAt(0);
 
+    if (tipo == 1) {
+        System.out.print("ID da Enfermaria: ");
+        String idEnfermaria = leitor.nextLine();
+        LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
+        LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
+        validarIntervalo(inicio, fim);
+        hospital.exibirTabelaHorizontal(idEnfermaria, inicio, fim, simbolo);
+
+    } else if (tipo == 2) {
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        hospital.exibirBarrasHorizontais(data, simbolo);
+
+    } else {
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        hospital.exibirBarrasVerticais(data, simbolo);
+    }
+}
+
+    // OPÇÃO 5
     public static void analisarPressaoIntervalo(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Analise de Pressao por Intervalo ---");
         validarHospitalNaoVazio(hospital);
@@ -263,11 +275,12 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         }
     }
 
+    // OPÇÃO 6
     public static void mostrarListagensOrdenadas(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Listagens Ordenadas ---");
         validarHospitalNaoVazio(hospital);
 
-        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA + "): ");
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
 
         System.out.println("\nEnfermarias por Taxa de Ocupacao (decrescente):");
         for (Enfermaria enf : hospital.listarEnfermariasOrdenadasPorTaxaOcupacao(data)) {
@@ -278,6 +291,7 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         }
     }
 
+    // OPÇÃO 7
     // RF4 — alterar capacidade (chama método static de IndicePressao)
     public static void alterarCapacidadeEnfermarias(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Alterar Capacidade das Enfermarias ---");
@@ -289,83 +303,67 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         Enfermaria.alterarCapacidade(hospital.getEnfermarias(), percentagem);
         System.out.printf("Capacidade ajustada em %.1f%%.%n", percentagem);
     }
-
+    // OPÇÃO 8
     // RF5 — percentagem de enfermarias em pressao
     public static void mostrarEnfermariasEmPressao(Scanner leitor, Hospital hospital) throws HospitalException {
-        System.out.println("\n--- Enfermarias em Pressao ---");
+        System.out.println("\n--- Percentagem de Enfermarias em Pressao ---");
         validarHospitalNaoVazio(hospital);
 
-        LocalDate data         = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+
         List<Enfermaria> lista = hospital.getEnfermarias();
+        int emPressaoCount = 0;
+        int total = lista.size();
 
-        int emPressao = 0;
-        for (Enfermaria enf : lista) {
-            if (enf.getTaxaOcupacao(data) > LIMIAR_PRESSAO) emPressao++;
-        }
-        double percentagem = lista.isEmpty() ? 0.0 : (emPressao * 100.0) / lista.size();
-
-        System.out.printf("%nData: %s | Total: %d | Em pressao (>%.0f%%): %.1f%%%n%n",
-                data, lista.size(), LIMIAR_PRESSAO, percentagem);
-
-        for (Enfermaria enf : lista) {
-            System.out.printf("  %-12s | %.1f%% | %s%n",
-                    enf.getIdentificador(),
-                    enf.getTaxaOcupacao(data),
-                    enf.emPressao(data) ? "EM PRESSAO" : "Normal");
-        }
-    }
-
-
-    // RF6 — ranking indice de pressao
-    public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {
-        System.out.println("\n--- Ranking Indice de Pressao ---");
-        validarHospitalNaoVazio(hospital);
-
-        LocalDate data         = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
-        List<Enfermaria> lista = hospital.getEnfermarias();
-
-        // calcula e guarda os indices numa lista paralela
-        List<double[]> indices = new ArrayList<>();
-        for (Enfermaria enf : lista) {
-            double percOcup     = enf.getTaxaOcupacao(data);
-            double percTurnover = enf.getPercTurnover(data);
-            int scoreOcup       = calcularScoreOcupacao(percOcup);
-            int scoreTurnover   = calcularScoreTurnover(percTurnover);
-            double indice       = Math.round((0.7 * scoreOcup + 0.3 * scoreTurnover) * 10.0) / 10.0;
-            indices.add(new double[]{indice, percOcup, percTurnover});
-        }
-
-        // ordena por indice decrescente (bubble sort)
-        for (int i = 0; i < lista.size() - 1; i++) {
-            for (int j = 0; j < lista.size() - i - 1; j++) {
-                if (indices.get(j)[0] < indices.get(j + 1)[0]) {
-                    double[] tempD = indices.get(j);
-                    indices.set(j, indices.get(j + 1));
-                    indices.set(j + 1, tempD);
-
-                    Enfermaria tempE = lista.get(j);
-                    lista.set(j, lista.get(j + 1));
-                    lista.set(j + 1, tempE);
-                }
+        for (int i = 0; i < total; i++) {
+            Enfermaria enf = lista.get(i);
+            if (enf.emPressao(data)) {
+                emPressaoCount++;
             }
         }
 
-        System.out.println();
-        System.out.printf("%-4s %-12s %-8s %-18s %-10s %-10s%n",
-                "Pos", "Enfermaria", "Indice", "Classificacao", "Ocup%", "Turnover%");
-        System.out.println("-".repeat(70));
+        double percentagem = (emPressaoCount * 100.0) / total;
+        System.out.printf("Estado em %s: %d de %d enfermarias estao em pressao (%.1f%%).%n",
+                data, emPressaoCount, total, percentagem);
+    }
 
-        for (int i = 0; i < lista.size(); i++) {
-            double indice = indices.get(i)[0];
-            System.out.printf("%-4d %-12s %-8.1f %-18s %-10.1f %-10.1f%n",
-                    i + 1,
-                    lista.get(i).getIdentificador(),
-                    indice,
-                    interpretarIndice(indice),
-                    indices.get(i)[1],
-                    indices.get(i)[2]);
+// Opção 9
+    // RF6 — ranking indice de pressao
+// OPÇÃO 9
+public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {
+    System.out.println("\n--- Ranking de Indice de Pressao ---");
+    validarHospitalNaoVazio(hospital);
+
+    LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
+    LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
+    validarIntervalo(inicio, fim);
+
+    List<Enfermaria> lista = hospital.getEnfermarias();
+    int n = lista.size();
+
+    // Ordenação Bubble Sort (Decrescente)
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            Enfermaria enf1 = lista.get(j);
+            Enfermaria enf2 = lista.get(j + 1);
+
+            double taxa1 = enf1.getPercentagemDiasEmPressao(inicio, fim);
+            double taxa2 = enf2.getPercentagemDiasEmPressao(inicio, fim);
+
+            if (taxa1 < taxa2) {
+                lista.set(j, enf2);
+                lista.set(j + 1, enf1);
+            }
         }
     }
+
+    System.out.println("\nRanking (Dias em pressao no intervalo):");
+    for (int i = 0; i < lista.size(); i++) {
+        Enfermaria enf = lista.get(i);
+        double taxa = enf.getPercentagemDiasEmPressao(inicio, fim);
+        System.out.printf("  %dº - %-10s | %5.1f%% dos dias%n", (i + 1), enf.getIdentificador(), taxa);
+    }
+}
 
 
     // RF7 — serialização
@@ -393,6 +391,35 @@ public static void configurarArranque(Scanner leitor, Hospital hospital) {
         Hospital hospitalCarregado = GestorSerializacao.carregarEstado(ficheiro);
         System.out.println("Estado carregado com sucesso. Enfermarias: " + hospitalCarregado.getEnfermarias().size());
         return hospitalCarregado;
+    }
+
+    // MÉTODOS AUXILIARES E VALIDAÇÕES
+
+    public static void carregarDadosPredefinidos(Hospital hospital) {
+        Enfermaria e1 = new modelo.EnfermariaGeral("GERAL_1", 30, 2, "14h-19h");
+        Enfermaria e2 = new modelo.EnfermariaPsiquiatrica("PSI_1", 10, "10h-12h", "ALTO");
+        hospital.adicionarEnfermaria(e1);
+        hospital.adicionarEnfermaria(e2);
+        e1.adicionarEpisodio(new Episodio("CAMA_1", LocalDate.now().minusDays(5)));
+    }
+
+    private static void validarDiretorioCSV(String diretorio) throws HospitalException {
+        File pasta = new File(diretorio);
+        if (!pasta.exists() || !pasta.isDirectory() ||
+                !new File(pasta, NOME_FICHEIRO_ENFERMARIAS).exists() ||
+                !new File(pasta, NOME_FICHEIRO_EPISODIOS).exists()) {
+            throw new HospitalException("Diretorio invalido ou ficheiros CSV em falta.");
+        }
+    }
+
+    private static void validarHospitalNaoVazio(Hospital hospital) throws HospitalException {
+        if (hospital == null || hospital.getEnfermarias().isEmpty()) {
+            throw new HospitalException("Nao existem enfermarias carregadas no hospital.");
+        }
+    }
+
+    private static void validarIntervalo(LocalDate inicio, LocalDate fim) throws HospitalException {
+        if (inicio.isAfter(fim)) throw new HospitalException("A data de inicio nao pode ser posterior ao fim.");
     }
 
 }

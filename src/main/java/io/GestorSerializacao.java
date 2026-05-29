@@ -1,59 +1,41 @@
 package io;
 
+import exceptions.HospitalException;
 import modelo.Hospital;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 /**
- * Classe responsável pela serialização e deserialização do Hospital.
- * Permite guardar e carregar o estado completo da aplicação em ficheiro.
+ * Classe responsavel por gravar e carregar o estado do hospital usando serializacao de objetos.
  */
 public class GestorSerializacao {
 
     /**
-     * Grava o objeto Hospital num ficheiro .ser.
+     * Converte o objeto Hospital em bytes e guarda-o num ficheiro.
      *
-     * @param hospital  objeto Hospital a gravar
-     * @param caminho   caminho do ficheiro de destino (ex: "hospital.ser")
+     * @param hospital O hospital a gravar.
+     * @param ficheiro O nome do ficheiro destino.
+     * @throws IOException Se houver um erro de escrita no disco.
      */
-    public static void gravar(Hospital hospital, String caminho) {
-        try {
-            FileOutputStream fileOut = new FileOutputStream(caminho);
-            ObjectOutputStream outStream = new ObjectOutputStream(fileOut);
-            outStream.writeObject(hospital);
-            outStream.close();
-            fileOut.close();
-            System.out.println("Dados gravados com sucesso em: " + caminho);
-        } catch (IOException i) {
-            i.printStackTrace();
+    public static void gravarEstado(Hospital hospital, String ficheiro) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ficheiro))) {
+            oos.writeObject(hospital);
         }
     }
 
     /**
-     * Carrega um objeto Hospital a partir de um ficheiro .ser.
+     * Le um ficheiro de bytes e reconstroi o objeto Hospital.
      *
-     * @param caminho   caminho do ficheiro a carregar (ex: "hospital.ser")
-     * @return          objeto Hospital deserializado, ou null se falhar
+     * @param ficheiro O nome do ficheiro a ler.
+     * @return O objeto Hospital reconstruido.
+     * @throws IOException Se o ficheiro nao existir ou não puder ser lido.
+     * @throws HospitalException Se os dados dentro do ficheiro não corresponderem a um Hospital.
      */
-    public static Hospital carregar(String caminho) {
-        Hospital hospital = null;
-        try {
-            FileInputStream fileIn = new FileInputStream(caminho);
-            ObjectInputStream inStream = new ObjectInputStream(fileIn);
-            hospital = (Hospital) inStream.readObject();
-            inStream.close();
-            fileIn.close();
-            System.out.println("Dados carregados com sucesso de: " + caminho);
-        } catch (IOException i) {
-            i.printStackTrace();
-        } catch (ClassNotFoundException c) {
-            System.out.println("Classe Hospital não encontrada.");
-            c.printStackTrace();
+    public static Hospital carregarEstado(String ficheiro) throws IOException, HospitalException {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ficheiro))) {
+            return (Hospital) ois.readObject();
+        } catch (ClassNotFoundException e) {
+            throw new HospitalException("O ficheiro nao contem um estado valido do Hospital.");
         }
-        return hospital;
     }
 }
