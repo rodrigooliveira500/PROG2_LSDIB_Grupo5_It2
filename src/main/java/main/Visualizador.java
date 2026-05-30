@@ -16,14 +16,13 @@ import java.util.List;
  */
 public class Visualizador {
 
-    /** Número de caracteres que representa 100% na barra ASCII. */
-    private static final int LARGURA_BARRA = 50;
-
     /** Altura máxima em linhas do gráfico vertical. */
     private static final int ALTURA_GRAFICO_VERTICAL = 20;
 
-    /** Símbolo utilizado por omissão. */
-    public static final char SIMBOLO_PADRAO = '#';
+    /** * Largura fixa (número de caracteres) utilizada para representar 100%
+     * nas barras ASCII.
+     */
+    private static final int TAMANHO_BARRA_ASCII = 50;
 
     /** Construtor privado — classe utilitária, não deve ser instanciada. */
     private Visualizador() {}
@@ -95,10 +94,10 @@ public class Visualizador {
             percLimitada = percentagem;
         }
         
-        int comprimento = (int) (percLimitada / 100.0 * LARGURA_BARRA);
+        int comprimento = (int) (percLimitada / 100.0 * TAMANHO_BARRA_ASCII);
         
         String preenchimento = repetir(simbolo, comprimento);
-        String espacos = repetir(' ', LARGURA_BARRA - comprimento);
+        String espacos = repetir(' ', TAMANHO_BARRA_ASCII - comprimento);
         
         return preenchimento + espacos;
     }
@@ -111,10 +110,12 @@ public class Visualizador {
      * @param enfermaria enfermaria a analisar
      * @param dataInicio data de início do intervalo (inclusive)
      * @param dataFim    data de fim do intervalo (inclusive)
+     * @param simbolo    símbolo a utilizar no desenho da barra
      */
     public static void mostrarTabelaOcupacao(Enfermaria enfermaria,
                                              LocalDate dataInicio,
-                                             LocalDate dataFim) {
+                                             LocalDate dataFim,
+                                             char simbolo) {
         if (enfermaria == null || dataInicio == null || dataFim == null) {
             System.out.println("[ERRO] Parâmetros inválidos para a tabela de ocupação.");
             return;
@@ -138,7 +139,7 @@ public class Visualizador {
             int    camas    = enfermaria.getNumeroCamas();
             double percOcup = enfermaria.getTaxaOcupacao(dataAtual);
             double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, dataAtual);
-            String barra    = construirBarra(percOcup, SIMBOLO_PADRAO);
+            String barra    = construirBarra(percOcup, simbolo);
 
             System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
                     enfermaria.getIdentificador(),
@@ -159,9 +160,11 @@ public class Visualizador {
      *
      * @param enfermarias lista de enfermarias a apresentar
      * @param data        data de referência
+     * @param simbolo     símbolo a utilizar no desenho da barra
      */
     public static void mostrarTabelaOcupacaoMultipla(List<Enfermaria> enfermarias,
-                                                     LocalDate data) {
+                                                     LocalDate data,
+                                                     char simbolo) {
         if (enfermarias == null || enfermarias.isEmpty()) {
             System.out.println("Nenhuma enfermaria disponível.");
             return;
@@ -180,7 +183,7 @@ public class Visualizador {
             int    camas    = enfermaria.getNumeroCamas();
             double percOcup = enfermaria.getTaxaOcupacao(data);
             double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, data);
-            String barra    = construirBarra(percOcup, SIMBOLO_PADRAO);
+            String barra    = construirBarra(percOcup, simbolo);
 
             System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
                     enfermaria.getIdentificador(),
@@ -220,8 +223,8 @@ public class Visualizador {
         System.out.println(repetir('=', 60));
         System.out.println("  Enfermarias em Pressão — " + data);
         System.out.println(repetir('=', 60));
-        System.out.printf("  Em pressão (ocup. > 85%%): %d de %d  ->  %.1f%%%n",
-                emPressao, total, percentagem);
+        System.out.printf("  Em pressão (ocup. > %.0f%%): %d de %d  ->  %.1f%%%n",
+                AnalisadorEstatistico.LIMIAR_PRESSAO, emPressao, total, percentagem);
         System.out.println();
         System.out.println("  Detalhe:");
         for (Enfermaria e : enfermarias) {
@@ -268,12 +271,12 @@ public class Visualizador {
 
         for (int i = 0; i < rotulos.size(); i++) {
             double valor       = valores.get(i);
-            int    comprimento = (int) ((valor / max) * LARGURA_BARRA);
+            int    comprimento = (int) ((valor / max) * TAMANHO_BARRA_ASCII);
             if (valor > 0 && comprimento == 0) {
                 comprimento = 1;
             }
             String barra   = repetir(simbolo, comprimento);
-            String espacos = repetir(' ', LARGURA_BARRA - comprimento);
+            String espacos = repetir(' ', TAMANHO_BARRA_ASCII - comprimento);
 
             System.out.printf("%-15s [%s%s]  %.2f%n",
                     truncar(rotulos.get(i), 15), barra, espacos, valor);
@@ -342,5 +345,58 @@ public class Visualizador {
         System.out.println(valoresLinha.toString());
         System.out.println();
     }
-    
+
+    // ===================================================================
+    // MÉTODOS ADICIONAIS PARA INTEGRAR A LÓGICA DE APRESENTAÇÃO
+    // ===================================================================
+
+    /**
+     * Imprime a monitorização diária do estado de pressão de uma unidade.
+     * (Movido do AnalisadorEstatistico para o Visualizador para cumprir SRP).
+     */
+    public static void mostrarAnalisePressaoIntervalo(Enfermaria enfermaria, LocalDate dataInicio, LocalDate dataFim) {
+        if (dataInicio == null || dataFim == null || dataInicio.isAfter(dataFim)) {
+            System.out.println(" Intervalo inválido.");
+            return;
+        }
+
+        LocalDate dataAtual = dataInicio;
+        while (!dataAtual.isAfter(dataFim)) {
+            double taxa = enfermaria.getTaxaOcupacao(dataAtual);
+            String estado = enfermaria.emPressao(dataAtual) ? "Em pressão" : "Estado normal";
+
+            System.out.printf(" %s -> %s (%.1f%%)%n", dataAtual, estado, taxa);
+            dataAtual = dataAtual.plusDays(1);
+        }
+
+        System.out.printf(" Dias em pressão: %.1f%%%n", enfermaria.getPercentagemDiasEmPressao(dataInicio, dataFim));
+    }
+
+    /**
+     * Desenha a tabela com a classificação e ranking do Índice de Pressão (RF6).
+     * (Movido do AnalisadorEstatistico para o Visualizador para cumprir SRP).
+     */
+    public static void mostrarRankingIndicePressao(List<Enfermaria> enfermarias, LocalDate data) {
+        List<Enfermaria> ordenadas = AnalisadorEstatistico.ordenarPorIndiceDePressao(enfermarias, data);
+
+        System.out.println("\n=== Ranking Indice de Pressao em " + data + " ===");
+        System.out.printf("%-5s %-10s %-8s %-8s %-8s %-8s %-20s%n",
+                "Pos", "Enfermaria", "Ocup%", "Turnover%", "ScOcup", "ScTurn", "Indice | Classificacao");
+        System.out.println(repetir('-', 75));
+
+        for (int i = 0; i < ordenadas.size(); i++) {
+            Enfermaria enf = ordenadas.get(i);
+
+            double percOcup = enf.getTaxaOcupacao(data);
+            double percTurnover = AnalisadorEstatistico.calcularTurnover(enf, data);
+
+            int scoreOcup = AnalisadorEstatistico.calcularScoreOcupacao(percOcup);
+            int scoreTurnover = AnalisadorEstatistico.calcularScoreTurnover(percTurnover);
+            double indice = AnalisadorEstatistico.calcularIndiceDePressao(enf, data);
+
+            System.out.printf("%-5d %-10s %-8.1f %-8.1f %-8d %-8d %.1f | %s%n",
+                    i + 1, enf.getIdentificador(), percOcup, percTurnover, scoreOcup, scoreTurnover,
+                    indice, AnalisadorEstatistico.interpretarIndice(indice));
+        }
+    }
 }
