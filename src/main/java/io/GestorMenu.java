@@ -1,11 +1,11 @@
 package io;
 
 import exceptions.HospitalException;
+import main.Visualizador;
 import modelo.Enfermaria;
 import modelo.Episodio;
 import modelo.Hospital;
 import utils.AnalisadorEstatistico;
-
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -13,7 +13,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
-
+/**
+ * Classe responsavel pela interface grafica de texto (consola) e interacao com o utilizador.
+ * Gere os menus principais, a leitura validada de dados e a orquestracao das operacoes do hospital.
+ */
 public class GestorMenu {
 
     // CONSTANTES DE CONFIGURAÇÃO
@@ -22,17 +25,23 @@ public class GestorMenu {
     private static final String SEPARADOR_TABELA = "-".repeat(90);
     private static final int CAPACIDADE_MAXIMA_CAMAS = 1000;
     private static final int MAX_ACOMPANHANTES = 100;
-    private static final int TAMANHO_BARRA_ASCII = 50;
     private static final String NOME_FICHEIRO_ENFERMARIAS = "enfermarias.csv";
     private static final String NOME_FICHEIRO_EPISODIOS = "episodios.csv";
     private static final String FORMATO_DATA_ESPERADO = "AAAA-MM-DD";
-    private static final double LIMIAR_PRESSAO         = 85.0;
 
 
 
 
 // MÉTODOS DE ARRANQUE E LEITURA
 
+    /**
+     * Apresenta o menu de arranque e define a forma como o hospital e inicializado.
+     * Pode iniciar vazio, carregar um estado gravado ou injetar dados predefinidos.
+     *
+     * @param leitor o objeto Scanner para ler a entrada do utilizador
+     * @param nomeHospital o nome a atribuir ao hospital caso inicie vazio
+     * @return o objeto Hospital instanciado e pronto a ser utilizado
+     */
     public static Hospital configurarArranque(Scanner leitor, String nomeHospital) {
         System.out.println(SEPARADOR);
         System.out.println("  Arranque do Sistema (Iteracao 2)");
@@ -69,7 +78,16 @@ public class GestorMenu {
 
     // LEITURA DE INPUT
 
-
+    /**
+     * Le um numero inteiro inserido pelo utilizador e garante que pertence a um intervalo especifico.
+     * Repete o pedido em caso de formato incorreto.
+     *
+     * @param leitor objeto Scanner para leitura do teclado
+     * @param mensagem texto apresentado ao utilizador
+     * @param min valor minimo aceite
+     * @param max valor maximo aceite
+     * @return o numero inteiro validado
+     */
     public static int lerInteiro(Scanner leitor, String mensagem, int min, int max) {
         int valor = 0;
         boolean entradaValida = false;
@@ -93,6 +111,13 @@ public class GestorMenu {
         return valor;
     }
 
+    /**
+     * Le um numero decimal (double) garantindo protecao contra erros de formato.
+     *
+     * @param leitor objeto Scanner para leitura do teclado
+     * @param mensagem texto apresentado ao utilizador
+     * @return o numero decimal validado
+     */
     public static double lerDecimal(Scanner leitor, String mensagem) {
         double valor = 0.0;
         boolean entradaValida = false;
@@ -111,6 +136,13 @@ public class GestorMenu {
         return valor;
     }
 
+    /**
+     * Solicita ao utilizador uma data especifica e garante o formato AAAA-MM-DD.
+     *
+     * @param leitor objeto Scanner para leitura do teclado
+     * @param mensagem texto apresentado ao utilizador
+     * @return objeto LocalDate que representa a data inserida
+     */
     public static LocalDate lerData(Scanner leitor, String mensagem) {
         LocalDate data = null;
         boolean entradaValida = false;
@@ -132,6 +164,14 @@ public class GestorMenu {
     // OPÇÕES DO MENU (1 a 11)
 
     // OPÇÃO 1
+    /**
+     * OPCAO 1: Carrega enfermarias e episodios a partir de ficheiros CSV externos.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital a popular
+     * @throws HospitalException caso a diretoria não contenha os ficheiros necessarios
+     * @throws IOException falha de I/O na leitura fisica
+     */
     public static void carregarCSV(Scanner leitor, Hospital hospital) throws HospitalException, IOException {
         System.out.println("\n--- Carregar Dados de Ficheiros CSV ---");
         System.out.print("Diretorio dos ficheiros CSV: ");
@@ -150,6 +190,12 @@ public class GestorMenu {
     }
 
     // OPÇÃO 2
+    /**
+     * OPCAO 2: Permite a insercao manual de uma enfermaria nova no hospital usando perguntas guiadas.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital afetado
+     */
     public static void inserirEnfermaria(Scanner leitor, Hospital hospital) {
         System.out.println("\n--- Inserir Enfermaria Manualmente ---");
         System.out.print("Introduza o nome/ID da enfermaria: ");
@@ -194,6 +240,12 @@ public class GestorMenu {
     }
 
     // OPÇÃO 3
+    /**
+     * OPCAO 3: Efetua o registo de entrada ou alta de um paciente manual.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital onde sera internado o paciente
+     */
     public static void inserirEpisodio(Scanner leitor, Hospital hospital) {
         System.out.println("\n--- Inserir Episodio Manualmente ---");
         if (hospital.getEnfermarias().isEmpty()) {
@@ -293,6 +345,13 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
     }
 
     // OPÇÃO 6
+    /**
+     * OPCAO 6: Lista as enfermarias de forma sequencial com base na sua taxa de ocupacao em tempo real.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital afetado
+     * @throws HospitalException validacao estrutural
+     */
     public static void mostrarListagensOrdenadas(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Listagens Ordenadas ---");
         validarHospitalNaoVazio(hospital);
@@ -310,6 +369,13 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
 
     // OPÇÃO 7
     // RF4 — alterar capacidade (chama método static de IndicePressao)
+    /**
+     * OPCAO 7: Exige uma taxa percentual ao utilizador para aumentar ou reduzir o espaco total das enfermarias.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital afetado
+     * @throws HospitalException validacao estrutural
+     */
     public static void alterarCapacidadeEnfermarias(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Alterar Capacidade das Enfermarias ---");
         validarHospitalNaoVazio(hospital);
@@ -346,6 +412,13 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
 
     // RF6 — ranking indice de pressao
 // OPÇÃO 9
+    /**
+     * OPCAO 9: Analisa os dias e altas, criando um podio entre os setores.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital afetado
+     * @throws HospitalException validacao de datas ou instalacao oca
+     */
 public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {
     System.out.println("\n--- Ranking de Indice de Pressao ---");
     validarHospitalNaoVazio(hospital);
@@ -357,7 +430,6 @@ public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital
     List<Enfermaria> lista = hospital.getEnfermarias();
     int n = lista.size();
 
-    // Ordenação Bubble Sort (Decrescente)
     for (int i = 0; i < n - 1; i++) {
         for (int j = 0; j < n - i - 1; j++) {
             Enfermaria enf1 = lista.get(j);
@@ -383,6 +455,14 @@ public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital
 
 
     // RF7 — serialização
+    /**
+     * OPCAO 10: Envia todo o objeto do Hospital para um disco rigido externo.
+     *
+     * @param leitor objeto Scanner
+     * @param hospital objeto Hospital a serializar
+     * @throws HospitalException validacao basica e de nome
+     * @throws IOException falha de I/O em Stream
+     */
     public static void gravarEstado(Scanner leitor, Hospital hospital) throws HospitalException, IOException {
         System.out.println("\n--- Gravar Estado do Hospital ---");
         validarHospitalNaoVazio(hospital);
@@ -395,6 +475,14 @@ public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital
         System.out.println("Estado gravado com sucesso.");
     }
 
+    /**
+     * OPCAO 11: Le um objeto serializado e devolve para a RAM do software.
+     *
+     * @param leitor objeto Scanner
+     * @return O Hospital ressuscitado para atribuir no Main
+     * @throws HospitalException Ficheiro danificado, sem extensao correta ou inexistente
+     * @throws IOException falhas I/O ClassNotFound
+     */
     public static Hospital carregarEstado(Scanner leitor) throws HospitalException, IOException {
         System.out.println("\n--- Carregar Estado do Hospital ---");
         System.out.print("Nome do ficheiro a carregar (ex: hospital.dat): ");
@@ -410,7 +498,11 @@ public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital
     }
 
     // MÉTODOS AUXILIARES E VALIDAÇÕES
-
+    /**
+     * Fornece um ambiente de testes sem input manual.
+     *
+     * @param hospital objeto recetor do pre-load
+     */
     public static void carregarDadosPredefinidos(Hospital hospital) {
         Enfermaria e1 = new modelo.EnfermariaGeral("GERAL_1", 30, 2, "14h-19h");
         Enfermaria e2 = new modelo.EnfermariaPsiquiatrica("PSI_1", 10, "10h-12h", "ALTO");
@@ -419,6 +511,12 @@ public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital
         e1.adicionarEpisodio(new Episodio("CAMA_1", LocalDate.now().minusDays(5)));
     }
 
+    /**
+     * Garante que os ficheiros .csv exigidos estao na localizacao antes de tentar abrir.
+     *
+     * @param diretorio local na maquina local
+     * @throws HospitalException se não tiver validade e estrutura minima
+     */
     private static void validarDiretorioCSV(String diretorio) throws HospitalException {
         File pasta = new File(diretorio);
         if (!pasta.exists() || !pasta.isDirectory() ||
@@ -428,12 +526,25 @@ public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital
         }
     }
 
+    /**
+     * Previne que lógicas de listagens, graficos, etc... facam estoirar o programa nao existerem dados .
+     *
+     * @param hospital hospital sob avaliacao
+     * @throws HospitalException caso não possua pelo menos 1 enfermaria valida
+     */
     private static void validarHospitalNaoVazio(Hospital hospital) throws HospitalException {
         if (hospital == null || hospital.getEnfermarias().isEmpty()) {
             throw new HospitalException("Nao existem enfermarias carregadas no hospital.");
         }
     }
 
+    /**
+     * Defesa temporal basica. Garante que fluxos de dados avancam sem dar reverse logic.
+     *
+     * @param inicio primeiro tempo
+     * @param fim ultimo tempo
+     * @throws HospitalException caso o tempo inicio seja posterior a tempo fim
+     */
     private static void validarIntervalo(LocalDate inicio, LocalDate fim) throws HospitalException {
         if (inicio.isAfter(fim)) throw new HospitalException("A data de inicio nao pode ser posterior ao fim.");
     }
