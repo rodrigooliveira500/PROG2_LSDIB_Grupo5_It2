@@ -9,38 +9,36 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Fornece cálculos estatísticos simples.
+ * Classe responsável por fornecer cálculos estatísticos e indicadores hospitalares.
+ * Segue estritamente o Princípio da Responsabilidade Única (SRP): não efetua
+ * impressões na consola, tratando apenas do processamento de dados matemáticos.
+ *
+ * @author Grupo 5
+ * @version 2.0
  */
 public class AnalisadorEstatistico {
 
+    /** Limiar percentual a partir do qual uma enfermaria é considerada em pressão. */
+    public static final double LIMIAR_PRESSAO = 85.0;
+
     /**
-     * Representa um resumo estatístico do LoS.
+     * Classe interna utilitária para encapsular o resumo estatístico do Length of Stay (LoS).
      */
     public static class SumarioLoS {
-
-        /** Número de episódios considerados. */
         private int totalEpisodios;
-
-        /** Média do LoS. */
         private double media;
-
-        /** Desvio Padrão do LoS. */
         private double desvioPadrao;
-
-        /** Valor mínimo do LoS. */
         private long minimo;
-
-        /** Valor máximo do LoS. */
         private long maximo;
 
         /**
-         * Cria um resumo de LoS.
+         * Cria um resumo estatístico estruturado do LoS.
          *
          * @param totalEpisodios número de episódios
-         * @param media média
-         * @param desvioPadrao desvio padrão
-         * @param minimo mínimo
-         * @param maximo máximo
+         * @param media média dos tempos de internamento
+         * @param desvioPadrao desvio padrão calculado
+         * @param minimo valor mínimo de internamento
+         * @param maximo valor máximo de internamento
          */
         public SumarioLoS(int totalEpisodios, double media, double desvioPadrao, long minimo, long maximo) {
             this.totalEpisodios = totalEpisodios;
@@ -50,61 +48,25 @@ public class AnalisadorEstatistico {
             this.maximo = maximo;
         }
 
-        /**
-         * Devolve o número de episódios.
-         *
-         * @return número de episódios
-         */
-        public int getTotalEpisodios() {
-            return totalEpisodios;
-        }
+        /** @return número de episódios avaliados */
+        public int getTotalEpisodios() { return totalEpisodios; }
+        /** @return média aritmética do LoS */
+        public double getMedia() { return media; }
+        /** @return desvio padrão do LoS */
+        public double getDesvioPadrao() { return desvioPadrao; }
+        /** @return valor mínimo registado */
+        public long getMinimo() { return minimo; }
+        /** @return valor máximo registado */
+        public long getMaximo() { return maximo; }
 
         /**
-         * Devolve a média.
+         * Retorna uma representação textual estruturada do resumo estatístico do LoS.
          *
-         * @return média
-         */
-        public double getMedia() {
-            return media;
-        }
-
-        /**
-         * Devolve o desvio padrão.
-         *
-         * @return desvio padrão
-         */
-        public double getDesvioPadrao() {
-            return desvioPadrao;
-        }
-
-        /**
-         * Devolve o mínimo.
-         *
-         * @return mínimo
-         */
-        public long getMinimo() {
-            return minimo;
-        }
-
-        /**
-         * Devolve o máximo.
-         *
-         * @return máximo
-         */
-        public long getMaximo() {
-            return maximo;
-        }
-
-
-        /**
-         * Retorna uma representação textual do resumo estatístico do LoS.
-         *
-         * @return string com total de episódios, média, desvio padrão, mínimo e máximo,
-         * ou "Sem episódios com alta" se {@code totalEpisodios} for zero
+         * @return string formatada com os indicadores descritivos
          */
         @Override
-        public String toString(){
-            if (totalEpisodios == 0){
+        public String toString() {
+            if (totalEpisodios == 0) {
                 return "Sem episódios com alta";
             }
             return String.format("Pacientes com alta=%d | media=%.2f | desvio padrao=%.2f | Minimo=%d | Máximo=%d",
@@ -113,12 +75,12 @@ public class AnalisadorEstatistico {
     }
 
     /**
-     * Calcula estatística de LoS de uma enfermaria.
+     * Calcula as estatísticas descritivas do Length of Stay (LoS) de uma enfermaria.
      *
-     * @param enfermaria enfermaria a analisar
-     * @return resumo estatístico
+     * @param enfermaria a enfermaria a analisar
+     * @return objeto SumarioLoS preenchido com as métricas calculadas
      */
-    public static SumarioLoS calculasEstatisticaLoS(Enfermaria enfermaria) {
+    public static SumarioLoS calcularEstatisticaLoS(Enfermaria enfermaria) {
         List<Long> valores = enfermaria.getValoresLoS();
         if (valores.isEmpty()) {
             return new SumarioLoS(0, 0.0, 0.0, 0, 0);
@@ -145,47 +107,14 @@ public class AnalisadorEstatistico {
     }
 
     /**
-     * Mostra a análise diária de pressão num intervalo.
+     * Ordena uma lista de enfermarias por taxa de ocupação decrescente (e por ID em caso de empate).
+     * Utiliza uma classe anónima Comparator nativa do Java.
      *
-     * @param enfermaria enfermaria a analisar
-     * @param dataInicio data inicial
-     * @param dataFim data final
-     */
-    public static void analisarPressaoPorIntervalo(Enfermaria enfermaria, LocalDate dataInicio, LocalDate dataFim){
-        if (dataInicio == null || dataFim == null || dataInicio.isAfter(dataFim)){
-            System.out.println(" Intervalo inválido.");
-            return;
-        }
-
-        LocalDate dataAtual = dataInicio;
-        while (!dataAtual.isAfter(dataFim)){
-            double taxa = enfermaria.getTaxaOcupacao(dataAtual);
-            String estado = enfermaria.emPressao(dataAtual) ? "Em pressão" : "Estado normal";
-            System.out.printf(" %s -> %s (%.1f%%)%n", dataAtual, estado, taxa);
-            dataAtual = dataAtual.plusDays(1);
-        }
-
-        System.out.printf(" Dias em pressão: %.1f%%%n",
-                enfermaria.getPercentagemDiasEmPressao(dataInicio, dataFim));
-
-    }
-
-    /**
-     * Ordena uma lista de enfermarias por taxa de ocupação decrescente,
-     * utilizando uma classe anónima como {@link Comparator}.
-     *
-     * @param enfermarias lista de enfermarias
-     * @param data data de referência
+     * @param enfermarias lista de enfermarias a ordenar
+     * @param data        data de referência para a taxa de ocupação
      */
     public static void ordenarPorTaxaOcupacao(List<Enfermaria> enfermarias, LocalDate data) {
         enfermarias.sort(new Comparator<Enfermaria>() {
-            /**
-             * Compara duas enfermarias por taxa de ocupação decrescente.
-             *
-             * @param primeira primeira enfermaria
-             * @param segunda segunda enfermaria
-             * @return valor de comparação
-             */
             @Override
             public int compare(Enfermaria primeira, Enfermaria segunda) {
                 int comparacao = Double.compare(segunda.getTaxaOcupacao(data), primeira.getTaxaOcupacao(data));
@@ -198,12 +127,12 @@ public class AnalisadorEstatistico {
     }
 
     /**
-     * Calcula o turnover de uma enfermaria numa data específica.
-     * Fórmula: (admissões + altas) / camasTotais × 100
+     * Calcula o turnover de uma enfermaria numa determinada data.
+     * Fórmula: ((admissões + altas) * 100.0) / camasTotais
      *
-     * @param enfermaria enfermaria a analisar
-     * @param data       data de referência
-     * @return percentagem de turnover; 0.0 se não houver camas
+     * @param enfermaria a enfermaria sob análise
+     * @param data       a data de referência
+     * @return a percentagem de turnover obtida (0.0 se não houver camas)
      */
     public static double calcularTurnover(Enfermaria enfermaria, LocalDate data) {
         if (enfermaria == null || data == null) {
@@ -220,37 +149,33 @@ public class AnalisadorEstatistico {
             }
         }
         int camas = enfermaria.getNumeroCamas();
-        return camas == 0 ? 0.0 : ((admissoes + altas) * 100.0) / camas;
+        if (camas == 0) {
+            return 0.0;
+        }
+        return ((admissoes + altas) * 100.0) / camas;
     }
 
     /**
-     * Calcula a percentagem de enfermarias com taxa de ocupação superior
-     * a 85% numa data de referência (RF5).
+     * Determina a percentagem global de enfermarias que se encontram em situação de pressão.
      *
-     * @param enfermarias lista de enfermarias a analisar
-     * @param data        data de referência
-     * @return percentagem (0–100) de enfermarias em pressão;
-     *         0.0 se a lista for nula ou vazia
+     * @param enfermarias listagem total do hospital
+     * @param data        data sob avaliação
+     * @return percentagem de unidades em pressão (0.0 a 100.0)
      */
     public static double percentagemEmPressao(List<Enfermaria> enfermarias, LocalDate data) {
         if (enfermarias == null || enfermarias.isEmpty()) {
             return 0.0;
         }
-        int emPressao = 0;
-        for (Enfermaria e : enfermarias) {
-            if (e.emPressao(data)) {
-                emPressao++;
-            }
-        }
+        int emPressao = contarEmPressao(enfermarias, data);
         return (emPressao * 100.0) / enfermarias.size();
     }
 
     /**
-     * Conta o número absoluto de enfermarias em pressão numa data.
+     * Conta o número absoluto de enfermarias em situação de pressão numa data.
      *
-     * @param enfermarias lista de enfermarias
+     * @param enfermarias listagem de enfermarias
      * @param data        data de referência
-     * @return número de enfermarias com ocupação superior a 85%
+     * @return número total de enfermarias com ocupação superior ao limiar
      */
     public static int contarEmPressao(List<Enfermaria> enfermarias, LocalDate data) {
         if (enfermarias == null) {
@@ -265,14 +190,18 @@ public class AnalisadorEstatistico {
         return count;
     }
 
+    // ===================================================================
+    // MOTORES DE CÁLCULO E ESCALAS DO ÍNDICE DE PRESSÃO (RF6)
+    // ===================================================================
+
     /**
      * Calcula o score de ocupação (1-5) com base na taxa de ocupação.
      *
      * @param percOcup taxa de ocupação em percentagem
-     * @return score de ocupação entre 1 e 5
+     * @return score de ocupação (valor inteiro entre 1 e 5)
      */
-    private static int calcularScoreOcupacao(double percOcup) {
-        if (percOcup <= 85) return 1;
+    public static int calcularScoreOcupacao(double percOcup) {
+        if (percOcup <= LIMIAR_PRESSAO) return 1;
         else if (percOcup <= 90) return 2;
         else if (percOcup <= 95) return 3;
         else if (percOcup <= 100) return 4;
@@ -283,9 +212,9 @@ public class AnalisadorEstatistico {
      * Calcula o score de turnover (1-5) com base na percentagem de turnover.
      *
      * @param percTurnover percentagem de turnover
-     * @return score de turnover entre 1 e 5
+     * @return score de turnover (valor inteiro entre 1 e 5)
      */
-    private static int calcularScoreTurnover(double percTurnover) {
+    public static int calcularScoreTurnover(double percTurnover) {
         if (percTurnover <= 10) return 1;
         else if (percTurnover <= 20) return 2;
         else if (percTurnover <= 30) return 3;
@@ -294,84 +223,54 @@ public class AnalisadorEstatistico {
     }
 
     /**
-     * Interpreta o índice de pressão e devolve a classificação.
+     * Interpreta o índice de pressão e devolve a respetiva classificação textual.
      *
      * @param indice índice de pressão calculado
-     * @return classificação textual do índice
+     * @return classificação textual do estado de pressão
      */
-    private static String interpretarIndice(double indice) {
+    public static String interpretarIndice(double indice) {
         if (indice <= 2) return "Pressao Baixa";
         else if (indice <= 3.5) return "Pressao Moderada";
         else return "Pressao Alta";
     }
 
     /**
-     * Calcula o Índice de Pressão (1-5) para cada enfermaria numa data de referência
-     * e apresenta o ranking por índice decrescente.
-     * Índice = 0.7 x scoreOcupacao + 0.3 x scoreTurnover
+     * Calcula o valor individual ponderado do Índice de Pressão (1 a 5) para uma enfermaria.
      *
-     * @param enfermarias lista de enfermarias a analisar
-     * @param data        data de referência
+     * @param enf  enfermaria sob avaliação
+     * @param data data de referência para os cálculos
+     * @return valor decimal do índice arredondado a uma casa decimal
      */
-    public static void calcularIndicePressao(List<Enfermaria> enfermarias, LocalDate data) {
-        if (enfermarias == null || enfermarias.isEmpty()) {
-            System.out.println("Sem enfermarias para analisar.");
-            return;
-        }
+    public static double calcularIndiceDePressao(Enfermaria enf, LocalDate data) {
+        double percOcup = enf.getTaxaOcupacao(data);
+        double percTurnover = calcularTurnover(enf, data);
 
+        int scoreOcup = calcularScoreOcupacao(percOcup);
+        int scoreTurnover = calcularScoreTurnover(percTurnover);
+
+        return Math.round((0.7 * scoreOcup + 0.3 * scoreTurnover) * 10.0) / 10.0;
+    }
+
+    /**
+     * Gera uma cópia da lista ordenada de forma decrescente pelo Índice de Pressão.
+     *
+     * @param enfermarias listagem original
+     * @param data        data de referência
+     * @return nova lista reordenada pelo índice de pressão
+     */
+    public static List<Enfermaria> ordenarPorIndiceDePressao(List<Enfermaria> enfermarias, LocalDate data) {
         List<Enfermaria> ordenadas = new ArrayList<>(enfermarias);
-        double[] indices = new double[ordenadas.size()];
 
-        for (int i = 0; i < ordenadas.size(); i++) {
-            Enfermaria enf = ordenadas.get(i);
-            double percOcup = enf.getTaxaOcupacao(data);
-            int admissoes = enf.getNumeroAdmissoes(data);
-            int altas = enf.getNumeroAltas(data);
-            double percTurnover = ((double)(admissoes + altas) / enf.getNumeroCamas()) * 100;
-
-            int scoreOcup = calcularScoreOcupacao(percOcup);
-            int scoreTurnover = calcularScoreTurnover(percTurnover);
-            indices[i] = Math.round((0.7 * scoreOcup + 0.3 * scoreTurnover) * 10.0) / 10.0;
-        }
-
-        // ordenar por índice decrescente (bubble sort)
-        for (int i = 0; i < ordenadas.size() - 1; i++) {
-            for (int j = 0; j < ordenadas.size() - 1 - i; j++) {
-                if (indices[j] < indices[j + 1]) {
-                    double tempIndice = indices[j];
-                    indices[j] = indices[j + 1];
-                    indices[j + 1] = tempIndice;
-                    Enfermaria tempEnf = ordenadas.get(j);
-                    ordenadas.set(j, ordenadas.get(j + 1));
-                    ordenadas.set(j + 1, tempEnf);
-                }
+        ordenadas.sort(new Comparator<Enfermaria>() {
+            @Override
+            public int compare(Enfermaria e1, Enfermaria e2) {
+                double ind1 = calcularIndiceDePressao(e1, data);
+                double ind2 = calcularIndiceDePressao(e2, data);
+                // Ordenação decrescente: comparamos o e2 com o e1
+                return Double.compare(ind2, ind1);
             }
-        }
+        });
 
-        System.out.println("\n=== Ranking Indice de Pressao em " + data + " ===");
-        System.out.printf("%-5s %-10s %-8s %-8s %-8s %-8s %-20s%n",
-                "Pos", "Enfermaria", "Ocup%", "Turnover%", "ScOcup", "ScTurn", "Indice | Classificacao");
-        System.out.println("-".repeat(75));
-
-        for (int i = 0; i < ordenadas.size(); i++) {
-            Enfermaria enf = ordenadas.get(i);
-            double percOcup = enf.getTaxaOcupacao(data);
-            int admissoes = enf.getNumeroAdmissoes(data);
-            int altas = enf.getNumeroAltas(data);
-            double percTurnover = ((double)(admissoes + altas) / enf.getNumeroCamas()) * 100;
-            int scoreOcup = calcularScoreOcupacao(percOcup);
-            int scoreTurnover = calcularScoreTurnover(percTurnover);
-
-            System.out.printf("%-5d %-10s %-8.1f %-8.1f %-8d %-8d %.1f | %s%n",
-                    i + 1,
-                    enf.getIdentificador(),
-                    percOcup,
-                    percTurnover,
-                    scoreOcup,
-                    scoreTurnover,
-                    indices[i],
-                    interpretarIndice(indices[i]));
-        }
+        return ordenadas;
     }
 }
-
