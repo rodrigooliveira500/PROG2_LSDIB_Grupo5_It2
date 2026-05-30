@@ -9,6 +9,8 @@ import java.util.List;
  */
 public class EnfermariaGeral extends Enfermaria {
 
+  private static final long serialVersionUID = 1L; // Adiciona esta linha
+
   /** Número máximo de acompanhantes permitidos por paciente. */
   private int limiteAcompanhantes;
   

@@ -6,6 +6,8 @@ package modelo;
  */
 public class EnfermariaPsiquiatrica extends Enfermaria {
 
+    private static final long serialVersionUID = 1L; // Adiciona esta linha
+
     /** Horário de visitas permitido na enfermaria. */
     private String horarioVisitas;
 
