@@ -6,8 +6,6 @@ import java.util.List;
 
 public class Hospital implements java.io.Serializable {
 
-    private static final int ESCALA_BARRA = 50;
-
     private String nome;
     private List<Enfermaria> enfermarias;
 
