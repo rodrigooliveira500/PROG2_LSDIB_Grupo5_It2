@@ -239,4 +239,107 @@ public class Visualizador {
         }
         System.out.println(repetir('=', 60));
     }
+
+    /**
+     * Apresenta um gráfico de barras horizontal (RF8).
+     * A barra mais longa corresponde ao valor máximo e ocupa 50 caracteres.
+     *
+     * @param rotulos lista de rótulos, um por barra
+     * @param valores lista de valores correspondentes
+     * @param simbolo símbolo a usar no preenchimento
+     */
+    public static void mostrarGraficoHorizontal(List<String> rotulos,
+                                                List<Double> valores,
+                                                char simbolo) {
+        if (rotulos == null || valores == null
+                || rotulos.size() != valores.size() || rotulos.isEmpty()) {
+            System.out.println("[ERRO] Dados inválidos para o gráfico horizontal.");
+            return;
+        }
+
+        System.out.println();
+        System.out.println("--- Gráfico de Barras Horizontal ---");
+        System.out.println();
+
+        double max = obterMaximo(valores);
+        if (max <= 0) {
+            max = 1.0;
+        }
+
+        for (int i = 0; i < rotulos.size(); i++) {
+            double valor       = valores.get(i);
+            int    comprimento = (int) ((valor / max) * LARGURA_BARRA);
+            if (valor > 0 && comprimento == 0) {
+                comprimento = 1;
+            }
+            String barra   = repetir(simbolo, comprimento);
+            String espacos = repetir(' ', LARGURA_BARRA - comprimento);
+
+            System.out.printf("%-15s [%s%s]  %.2f%n",
+                    truncar(rotulos.get(i), 15), barra, espacos, valor);
+        }
+        System.out.println();
+    }
+
+    /**
+     * Apresenta um gráfico de barras vertical (RF8).
+     * Altura máxima de 20 linhas; cada coluna ocupa 5 caracteres de largura.
+     *
+     * @param rotulos lista de rótulos, um por barra
+     * @param valores lista de valores correspondentes
+     * @param simbolo símbolo a usar no preenchimento
+     */
+    public static void mostrarGraficoVertical(List<String> rotulos,
+                                              List<Double> valores,
+                                              char simbolo) {
+        if (rotulos == null || valores == null
+                || rotulos.size() != valores.size() || rotulos.isEmpty()) {
+            System.out.println("[ERRO] Dados inválidos para o gráfico vertical.");
+            return;
+        }
+
+        System.out.println();
+        System.out.println("--- Gráfico de Barras Vertical ---");
+        System.out.println();
+
+        double max = obterMaximo(valores);
+        if (max <= 0) {
+            max = 1.0;
+        }
+
+        int[] alturas = new int[valores.size()];
+        for (int i = 0; i < valores.size(); i++) {
+            alturas[i] = (int) ((valores.get(i) / max) * ALTURA_GRAFICO_VERTICAL);
+            if (valores.get(i) > 0 && alturas[i] == 0) {
+                alturas[i] = 1;
+            }
+        }
+
+        for (int linha = ALTURA_GRAFICO_VERTICAL; linha >= 1; linha--) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < alturas.length; i++) {
+                if (alturas[i] >= linha) {
+                    sb.append("  ").append(simbolo).append("  ");
+                } else {
+                    sb.append("     ");
+                }
+            }
+            System.out.println(sb.toString());
+        }
+
+        System.out.println(repetir('-', rotulos.size() * 5));
+
+        StringBuilder rotulosLinha = new StringBuilder();
+        for (String r : rotulos) {
+            rotulosLinha.append(String.format("%-5s", truncar(r, 4)));
+        }
+        System.out.println(rotulosLinha.toString());
+
+        StringBuilder valoresLinha = new StringBuilder();
+        for (double v : valores) {
+            valoresLinha.append(String.format("%-5s", truncar(String.format("%.0f", v), 4)));
+        }
+        System.out.println(valoresLinha.toString());
+        System.out.println();
+    }
 }
