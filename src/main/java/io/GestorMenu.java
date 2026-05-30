@@ -314,23 +314,34 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
         LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
         LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
         validarIntervalo(inicio, fim);
-        hospital.exibirTabelaHorizontal(idEnfermaria, inicio, fim, simbolo);
-
-    } else if (tipo == 2) {
-        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
-        hospital.exibirBarrasHorizontais(data, simbolo);
-
+        Enfermaria enf = hospital.obterEnfermaria(idEnfermaria);
+        if (enf != null) {
+            main.Visualizador.mostrarTabelaOcupacao(enf, inicio, fim, simbolo);
+        } else {
+            System.out.println("[ERRO] Enfermaria nao encontrada.");
+        }
     } else {
         LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
-        hospital.exibirBarrasVerticais(data, simbolo);
+
+        // Preparar dados para o Visualizador
+        List<String> rotulos = new ArrayList<>();
+        List<Double> valores = new ArrayList<>();
+        for (Enfermaria e : hospital.getEnfermarias()) {
+            rotulos.add(e.getIdentificador());
+            valores.add(e.getTaxaOcupacao(data));
+        }
+
+        if (tipo == 2) {
+            main.Visualizador.mostrarGraficoHorizontal(rotulos, valores, simbolo);
+        } else if (tipo == 3) {
+            main.Visualizador.mostrarGraficoVertical(rotulos, valores, simbolo);
+        }
     }
-}
 
     // OPÇÃO 5
     public static void analisarPressaoIntervalo(Scanner leitor, Hospital hospital) throws HospitalException {
         System.out.println("\n--- Analise de Pressao por Intervalo ---");
         validarHospitalNaoVazio(hospital);
-
 
         LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
         LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
@@ -340,7 +351,8 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
         for (int i = 0; i < lista.size(); i++) {
             Enfermaria enf = lista.get(i);
             System.out.printf("%nEnfermaria %s:%n", enf.getIdentificador());
-            AnalisadorEstatistico.analisarPressaoPorIntervalo(enf, inicio, fim);
+
+            main.Visualizador.mostrarAnalisePressaoIntervalo(enf, inicio, fim);
         }
     }
 
@@ -419,39 +431,14 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
      * @param hospital objeto Hospital afetado
      * @throws HospitalException validacao de datas ou instalacao oca
      */
-public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {
-    System.out.println("\n--- Ranking de Indice de Pressao ---");
-    validarHospitalNaoVazio(hospital);
+    public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {
+        System.out.println("\n--- Ranking de Indice de Pressao ---");
+        validarHospitalNaoVazio(hospital);
 
-    LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
-    LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
-    validarIntervalo(inicio, fim);
-
-    List<Enfermaria> lista = hospital.getEnfermarias();
-    int n = lista.size();
-
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            Enfermaria enf1 = lista.get(j);
-            Enfermaria enf2 = lista.get(j + 1);
-
-            double taxa1 = enf1.getPercentagemDiasEmPressao(inicio, fim);
-            double taxa2 = enf2.getPercentagemDiasEmPressao(inicio, fim);
-
-            if (taxa1 < taxa2) {
-                lista.set(j, enf2);
-                lista.set(j + 1, enf1);
-            }
-        }
+        LocalDate data = lerData(leitor, "Data de referencia (" +
+                "" + FORMATO_DATA_ESPERADO + "): ");
+        main.Visualizador.mostrarRankingIndicePressao(hospital.getEnfermarias(), data);
     }
-
-    System.out.println("\nRanking (Dias em pressao no intervalo):");
-    for (int i = 0; i < lista.size(); i++) {
-        Enfermaria enf = lista.get(i);
-        double taxa = enf.getPercentagemDiasEmPressao(inicio, fim);
-        System.out.printf("  %dº - %-10s | %5.1f%% dos dias%n", (i + 1), enf.getIdentificador(), taxa);
-    }
-}
 
 
     // RF7 — serialização

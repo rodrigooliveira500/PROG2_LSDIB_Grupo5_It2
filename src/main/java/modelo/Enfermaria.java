@@ -4,12 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.io.Serializable;
 
 /**
  * Representa uma enfermaria do hospital.
  */
-public abstract class Enfermaria implements Analisavel {
-
+public abstract class Enfermaria implements Analisavel, Serializable {
     /** Identificador da enfermaria. */
     private String identificador;
 

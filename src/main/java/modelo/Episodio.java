@@ -2,11 +2,11 @@ package modelo;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-
+import java.io.Serializable;
 /**
  * Representa um episódio de internamento.
  */
-public class Episodio {
+public class Episodio implements java.io.Serializable  {
     private static final long serialVersionUID = 1L;
 
 

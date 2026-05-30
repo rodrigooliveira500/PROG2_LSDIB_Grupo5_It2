@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Hospital {
+public class Hospital implements java.io.Serializable {
 
     private static final int ESCALA_BARRA = 50;
 
@@ -65,100 +65,7 @@ public class Hospital {
         return ordenadas;
     }
 
-    // RF3 — tabela alinhada com barras ASCII horizontais para uma enfermaria num intervalo
-    public void exibirTabelaHorizontal(String idEnfermaria, LocalDate inicio, LocalDate fim, char simbolo) {
-        Enfermaria enf = obterEnfermaria(idEnfermaria);
-        if (enf == null) {
-            System.out.println("[ERRO] Enfermaria nao encontrada.");
-            return;
-        }
 
-        System.out.println();
-        System.out.printf("%-14s %-12s %-8s %-10s %-9s %-10s  Grafico (50=%s)%n",
-                "Enfermaria", "Data", "Ocupadas", "CamasTotais", "Ocup%", "Turnover%", "100%");
-        System.out.println("-".repeat(110));
-
-        LocalDate data = inicio;
-        while (!data.isAfter(fim)) {
-            int    ocupadas    = enf.getOcupacaoAbsoluta(data);
-            int    camasTotais = enf.getNumeroCamas();
-            double percOcup    = enf.getTaxaOcupacao(data);
-            double percTurnover = enf.getPercTurnover(data);
-            String barra       = gerarBarra(percOcup, simbolo);
-
-            System.out.printf("%-14s %-12s %-8d %-11d %-9.1f %-10.1f  [%s]%n",
-                    enf.getIdentificador(), data, ocupadas, camasTotais, percOcup, percTurnover, barra);
-
-            data = data.plusDays(1);
-        }
-        System.out.println();
-    }
-
-    // RF8 — barras horizontais para todas as enfermarias numa data
-    public void exibirBarrasHorizontais(LocalDate data, char simbolo) {
-        System.out.println();
-        System.out.printf("%-14s %-12s  Ocupacao (50=%s)%n", "Enfermaria", "Data", "100%");
-        System.out.println("-".repeat(80));
-
-        for (Enfermaria enf : enfermarias) {
-            double percOcup = enf.getTaxaOcupacao(data);
-            System.out.printf("%-14s %-12s [%s] %.1f%%%n",
-                    enf.getIdentificador(), data, gerarBarra(percOcup, simbolo), percOcup);
-        }
-        System.out.println();
-    }
-
-    // RF8 — barras verticais para todas as enfermarias numa data
-    public void exibirBarrasVerticais(LocalDate data, char simbolo) {
-        if (enfermarias.isEmpty()) {
-            System.out.println("  Sem enfermarias para exibir.");
-            return;
-        }
-
-        int alturaMaxima = 20;
-        System.out.println("\n  Grafico Vertical — Ocupacao em " + data + "\n");
-
-        for (int linha = alturaMaxima; linha >= 1; linha--) {
-            double limiar = (linha * 100.0) / alturaMaxima;
-            if (linha % 4 == 0 || linha == alturaMaxima)
-                System.out.printf("%5.0f%% |", limiar);
-            else
-                System.out.print("       |");
-
-            for (Enfermaria enf : enfermarias) {
-                if (enf.getTaxaOcupacao(data) >= limiar)
-                    System.out.printf("  %c  ", simbolo);
-                else
-                    System.out.print("     ");
-            }
-            System.out.println();
-        }
-
-        System.out.print("    0% +");
-        System.out.print("-----".repeat(enfermarias.size()));
-        System.out.println();
-
-        System.out.print("        ");
-        for (Enfermaria enf : enfermarias) {
-            String id = enf.getIdentificador();
-            System.out.printf("%-5s", id.length() > 5 ? id.substring(0, 5) : id);
-        }
-        System.out.println("\n");
-    }
-
-    // gera uma barra ASCII com ESCALA_BARRA caracteres proporcional à percentagem
-    private String gerarBarra(double percentagem, char simbolo) {
-        int n = (int) Math.round((percentagem / 100.0) * ESCALA_BARRA);
-        if (n > ESCALA_BARRA) n = ESCALA_BARRA;
-        if (n < 0) n = 0;
-
-        String barra = "";
-        for (int i = 0; i < n; i++)
-            barra += simbolo;
-        for (int i = n; i < ESCALA_BARRA; i++)
-            barra += " ";
-        return barra;
-    }
 
     public void substituirDados(Hospital outro) {
         this.nome = outro.nome;
