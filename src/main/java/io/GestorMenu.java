@@ -344,7 +344,6 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
                 data, emPressaoCount, total, percentagem);
     }
 
-// Opção 9
     // RF6 — ranking indice de pressao
 // OPÇÃO 9
 public static void mostrarRankingIndicePressao(Scanner leitor, Hospital hospital) throws HospitalException {

@@ -152,10 +152,12 @@ public class Hospital {
         if (n > ESCALA_BARRA) n = ESCALA_BARRA;
         if (n < 0) n = 0;
 
-        String barraPreenchida = String.valueOf(simbolo).repeat(n);
-        String barraVazia = " ".repeat(ESCALA_BARRA - n);
-
-        return barraPreenchida + barraVazia;
+        String barra = "";
+        for (int i = 0; i < n; i++)
+            barra += simbolo;
+        for (int i = n; i < ESCALA_BARRA; i++)
+            barra += " ";
+        return barra;
     }
 
     public void substituirDados(Hospital outro) {

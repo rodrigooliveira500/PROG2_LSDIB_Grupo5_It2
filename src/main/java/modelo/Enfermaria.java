@@ -340,7 +340,7 @@ public static void alterarCapacidade(List<Enfermaria> enfermarias, double percen
 }
 
     /**
-     * Calcula a percentagem de turnover (rotatividade) numa data especifica.
+     * Calcula a percentagem de turnover  numa data especifica.
      * Baseia-se no numero de altas dadas nesse dia face a capacidade total.
      *
      * @param data data a analisar
@@ -351,8 +351,9 @@ public static void alterarCapacidade(List<Enfermaria> enfermarias, double percen
             return 0.0;
         }
 
-        int altasNoDia = getNumeroAltas(data);
-        return (altasNoDia * 100.0) / numeroCamas;
+        int admissoes = getNumeroAdmissoes(data);
+        int altas     = getNumeroAltas(data);
+        return ((admissoes + altas) * 100.0) / numeroCamas;
     }
 
 }
