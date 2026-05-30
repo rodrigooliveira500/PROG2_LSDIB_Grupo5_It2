@@ -1,17 +1,16 @@
 package io;
 
 import exceptions.HospitalException;
-import main.Visualizador;
 import modelo.Enfermaria;
 import modelo.Episodio;
 import modelo.Hospital;
-import utils.AnalisadorEstatistico;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 /**
  * Classe responsavel pela interface grafica de texto (consola) e interacao com o utilizador.
@@ -22,7 +21,6 @@ public class GestorMenu {
     // CONSTANTES DE CONFIGURAÇÃO
 
     private static final String SEPARADOR = "-".repeat(60);
-    private static final String SEPARADOR_TABELA = "-".repeat(90);
     private static final int CAPACIDADE_MAXIMA_CAMAS = 1000;
     private static final int MAX_ACOMPANHANTES = 100;
     private static final String NOME_FICHEIRO_ENFERMARIAS = "enfermarias.csv";
@@ -337,6 +335,7 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
             main.Visualizador.mostrarGraficoVertical(rotulos, valores, simbolo);
         }
     }
+}
 
     // OPÇÃO 5
     public static void analisarPressaoIntervalo(Scanner leitor, Hospital hospital) throws HospitalException {
