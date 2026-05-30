@@ -5,14 +5,31 @@ import modelo.Hospital;
 
 import java.util.Scanner;
 
+
+/**
+ * Classe principal do sistema de gestao hospitalar.
+ * * Atua como o orquestrador da aplicacao: inicializa os componentes essenciais,
+ * gere o ciclo de vida do menu principal e encaminha as escolhas do utilizador
+ * para a camada de apresentacao (GestorMenu).
+ * * @author David Barbosa
+ * @version 2.0
+ */
 public class Main {
 
     private static final String SEPARADOR = "-".repeat(60);
     private static final int OPCAO_MAXIMA = 11;
 
+
+    /**
+     * Metodo principal que arranca a aplicacao.
+     * Configura o estado inicial do hospital atraves do menu de arranque e mantem
+     * o sistema em loop continuo ate o utilizador introduzir a condicao de paragem (0).
+     *
+     * @param args argumentos passados pela linha de comandos (nao utilizados nesta aplicacao)
+     */
     public static void main(String[] args) {
         Scanner leitor = new Scanner(System.in);
-
+// Delega o arranque e recebe o objeto central do modelo de negocio
         Hospital hospital = GestorMenu.configurarArranque(leitor, "Hospital XYZ");
 
         int opcao;
@@ -44,6 +61,12 @@ public class Main {
         leitor.close();
     }
 
+    /**
+     * Imprime no ecrã o bloco visual do menu principal com todas as funcionalidades.
+     *
+     * @param nomeHospital o nome do hospital atualmente carregado na memoria,
+     * apresentado no cabecalho do menu para contexto visual
+     */
     private static void printMenu(String nomeHospital) {
         System.out.println("\n" + SEPARADOR);
         System.out.println("  " + nomeHospital + " - Menu Principal");
