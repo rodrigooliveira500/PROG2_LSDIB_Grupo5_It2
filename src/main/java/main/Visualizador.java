@@ -163,8 +163,8 @@ public class Visualizador {
      * @param simbolo     símbolo a utilizar no desenho da barra
      */
     public static void mostrarTabelaOcupacaoMultipla(List<Enfermaria> enfermarias,
-                                                     LocalDate data,
-                                                     char simbolo) {
+                                             LocalDate data,
+                                             char simbolo) {
         if (enfermarias == null || enfermarias.isEmpty()) {
             System.out.println("Nenhuma enfermaria disponível.");
             return;
@@ -197,10 +197,7 @@ public class Visualizador {
         System.out.println(repetir('=', 110));
     }
 
-    // ===================================================================
     // RF5 — Percentagem de enfermarias em pressão
-    // ===================================================================
-
     /**
      * Apresenta a percentagem de enfermarias em pressão
      * (ocupação > 85%) numa data de referência, com detalhe por enfermaria (RF5).
@@ -264,16 +261,15 @@ public class Visualizador {
         System.out.println("--- Gráfico de Barras Horizontal ---");
         System.out.println();
 
-        double max = obterMaximo(valores);
-        if (max <= 0) {
-            max = 1.0;
-        }
-
         for (int i = 0; i < rotulos.size(); i++) {
             double valor       = valores.get(i);
-            int    comprimento = (int) ((valor / max) * TAMANHO_BARRA_ASCII);
+
+            // Matemática corrigida: ancorado a 100%
+            int comprimento = (int) Math.round((valor / 100.0) * TAMANHO_BARRA_ASCII);
+            if (comprimento > TAMANHO_BARRA_ASCII) comprimento = TAMANHO_BARRA_ASCII;
+
             if (valor > 0 && comprimento == 0) {
-                comprimento = 1;
+                comprimento = 1; // Garante que não desaparece se for > 0
             }
             String barra   = repetir(simbolo, comprimento);
             String espacos = repetir(' ', TAMANHO_BARRA_ASCII - comprimento);
@@ -305,14 +301,12 @@ public class Visualizador {
         System.out.println("--- Gráfico de Barras Vertical ---");
         System.out.println();
 
-        double max = obterMaximo(valores);
-        if (max <= 0) {
-            max = 1.0;
-        }
-
         int[] alturas = new int[valores.size()];
         for (int i = 0; i < valores.size(); i++) {
-            alturas[i] = (int) ((valores.get(i) / max) * ALTURA_GRAFICO_VERTICAL);
+            alturas[i] = (int) Math.round((valores.get(i) / 100.0) * ALTURA_GRAFICO_VERTICAL);
+
+            if (alturas[i] > ALTURA_GRAFICO_VERTICAL) alturas[i] = ALTURA_GRAFICO_VERTICAL;
+
             if (valores.get(i) > 0 && alturas[i] == 0) {
                 alturas[i] = 1;
             }
@@ -346,9 +340,7 @@ public class Visualizador {
         System.out.println();
     }
 
-    // ===================================================================
     // MÉTODOS ADICIONAIS PARA INTEGRAR A LÓGICA DE APRESENTAÇÃO
-    // ===================================================================
 
     /**
      * Imprime a monitorização diária do estado de pressão de uma unidade.

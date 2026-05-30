@@ -289,6 +289,8 @@ public class GestorMenu {
 
 // Opção 4
     // RF3 + RF8 — gráficos de ocupacao (tabela + barras ASCII)
+// OPÇÃO 4
+// RF3 + RF8 — graficos de ocupacao (tabela + barras ASCII) e Tabela Geral
 public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) throws HospitalException {
     System.out.println("\n--- Graficos de Ocupacao (ASCII) ---");
     validarHospitalNaoVazio(hospital);
@@ -297,14 +299,15 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
     System.out.println("  1 - Tabela de Evolucao (1 Enfermaria, Intervalo de datas)");
     System.out.println("  2 - Barras Horizontais (Todas as enfermarias, 1 Data)");
     System.out.println("  3 - Barras Verticais   (Todas as enfermarias, 1 Data)");
+    System.out.println("  4 - Tabela Geral Detalhada (Todas as enfermarias, 1 Data)");
 
-    int tipo = lerInteiro(leitor, "Opcao (1-3): ", 1, 3);
+    int tipo = lerInteiro(leitor, "Opcao (1-4): ", 1, 4);
 
     System.out.print("Simbolo para preencher o grafico (ex: #, *, =): ");
     String inputSimbolo = leitor.nextLine();
 
-     // Se o utilizador der apenas 'Enter', usa '#' por defeito
-    char simbolo = inputSimbolo.isEmpty() ? '#' : inputSimbolo.charAt(0);
+    // Defesa contra espaços vazios
+    char simbolo = (inputSimbolo == null || inputSimbolo.trim().isEmpty()) ? '#' : inputSimbolo.charAt(0);
 
     if (tipo == 1) {
         System.out.print("ID da Enfermaria: ");
@@ -312,28 +315,39 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
         LocalDate inicio = lerData(leitor, "Data de inicio (" + FORMATO_DATA_ESPERADO + "): ");
         LocalDate fim    = lerData(leitor, "Data de fim   (" + FORMATO_DATA_ESPERADO + "): ");
         validarIntervalo(inicio, fim);
+
         Enfermaria enf = hospital.obterEnfermaria(idEnfermaria);
         if (enf != null) {
             main.Visualizador.mostrarTabelaOcupacao(enf, inicio, fim, simbolo);
         } else {
             System.out.println("[ERRO] Enfermaria nao encontrada.");
         }
-    } else {
+
+    } else if (tipo == 2) {
         LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
 
-        // Preparar dados para o Visualizador
         List<String> rotulos = new ArrayList<>();
         List<Double> valores = new ArrayList<>();
         for (Enfermaria e : hospital.getEnfermarias()) {
             rotulos.add(e.getIdentificador());
             valores.add(e.getTaxaOcupacao(data));
         }
+        main.Visualizador.mostrarGraficoHorizontal(rotulos, valores, simbolo);
 
-        if (tipo == 2) {
-            main.Visualizador.mostrarGraficoHorizontal(rotulos, valores, simbolo);
-        } else if (tipo == 3) {
-            main.Visualizador.mostrarGraficoVertical(rotulos, valores, simbolo);
+    } else if (tipo == 3) {
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+
+        List<String> rotulos = new ArrayList<>();
+        List<Double> valores = new ArrayList<>();
+        for (Enfermaria e : hospital.getEnfermarias()) {
+            rotulos.add(e.getIdentificador());
+            valores.add(e.getTaxaOcupacao(data));
         }
+        main.Visualizador.mostrarGraficoVertical(rotulos, valores, simbolo);
+
+    } else if (tipo == 4) {
+        LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
+        main.Visualizador.mostrarTabelaOcupacaoMultipla(hospital.getEnfermarias(), data, simbolo);
     }
 }
 
@@ -405,20 +419,7 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
 
         LocalDate data = lerData(leitor, "Data de referencia (" + FORMATO_DATA_ESPERADO + "): ");
 
-        List<Enfermaria> lista = hospital.getEnfermarias();
-        int emPressaoCount = 0;
-        int total = lista.size();
-
-        for (int i = 0; i < total; i++) {
-            Enfermaria enf = lista.get(i);
-            if (enf.emPressao(data)) {
-                emPressaoCount++;
-            }
-        }
-
-        double percentagem = (emPressaoCount * 100.0) / total;
-        System.out.printf("Estado em %s: %d de %d enfermarias estao em pressao (%.1f%%).%n",
-                data, emPressaoCount, total, percentagem);
+        main.Visualizador.mostrarPercentagemEmPressao(hospital.getEnfermarias(), data);
     }
 
     // RF6 — ranking indice de pressao
