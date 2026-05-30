@@ -125,31 +125,31 @@ public class EnfermariaTest {
 
         List<Episodio> ordenados = enf.getEpisodiosOrdenadosPorAdmissao();
 
-        // Verifica que o primeiro é o mais antigo
+        /** Verifica que o primeiro é o mais antigo */
         assertEquals(LocalDate.of(2024, 3, 1), ordenados.get(0).getDataAdmissao());
-        // Verifica que o segundo é o do meio
+        /** Verifica que o segundo é o do meio */
         assertEquals(LocalDate.of(2024, 3, 5), ordenados.get(1).getDataAdmissao());
-        // Verifica que o último é o mais recente
+        /** Verifica que o último é o mais recente */
         assertEquals(LocalDate.of(2024, 3, 10), ordenados.get(2).getDataAdmissao());
     }
 
     @Test
     void testExisteConflitoDeCamaSemConflito() {
-        // C1 tem alta em 10/03, novo episódio começa em 11/03 — sem conflito
+        /** C1 tem alta em 10/03, novo episódio começa em 11/03 — sem conflito */
         Episodio novoEp = new Episodio("C1", LocalDate.of(2024, 3, 11));
         assertFalse(enfermaria.existeConflitoDeCama(novoEp));
     }
 
     @Test
     void testExisteConflitoDeCamaComConflito() {
-        // C2 já está ativo desde 05/03 sem alta — novo episódio na mesma cama conflitua
+        /** C2 já está ativo desde 05/03 sem alta — novo episódio na mesma cama conflitua */
         Episodio novoEp = new Episodio("C2", LocalDate.of(2024, 3, 8));
         assertTrue(enfermaria.existeConflitoDeCama(novoEp));
     }
 
     @Test
     void testExisteConflitoDeCamaDiferente() {
-        // Cama diferente — nunca há conflito
+        /** Cama diferente — nunca há conflito */
         Episodio novoEp = new Episodio("C4", LocalDate.of(2024, 3, 1));
         assertFalse(enfermaria.existeConflitoDeCama(novoEp));
     }
