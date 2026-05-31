@@ -1,5 +1,6 @@
 package modelo;
 
+import utils.AnalisadorEstatistico;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,27 +42,7 @@ public class Hospital implements java.io.Serializable {
     }
 
     public List<Enfermaria> listarEnfermariasOrdenadasPorTaxaOcupacao(LocalDate data) {
-        List<Enfermaria> ordenadas = getEnfermarias();
-        int n = ordenadas.size();
-
-        for (int i = 0; i < n - 1; i++) {
-            for (int j = 0; j < n - i - 1; j++) {
-                Enfermaria enf1 = ordenadas.get(j);
-                Enfermaria enf2 = ordenadas.get(j + 1);
-
-                double taxa1 = enf1.getTaxaOcupacao(data);
-                double taxa2 = enf2.getTaxaOcupacao(data);
-
-                boolean trocar = taxa1 < taxa2
-                        || (taxa1 == taxa2 && enf1.getIdentificador().compareTo(enf2.getIdentificador()) > 0);
-
-                if (trocar) {
-                    ordenadas.set(j, enf2);
-                    ordenadas.set(j + 1, enf1);
-                }
-            }
-        }
-        return ordenadas;
+        return AnalisadorEstatistico.ordenarPorTaxaOcupacao(this.enfermarias, data);
     }
 
     @Override

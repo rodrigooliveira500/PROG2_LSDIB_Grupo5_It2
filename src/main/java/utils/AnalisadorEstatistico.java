@@ -18,8 +18,20 @@ import java.util.ArrayList;
  */
 public class AnalisadorEstatistico {
 
+    // Constantes de Ocupação
     /** Limiar percentual a partir do qual uma enfermaria é considerada em pressão. */
     public static final double LIMIAR_PRESSAO = 85.0;
+    private static final double LIMIAR_OCUPACAO_NIVEL_2 = 90.0;
+    private static final double LIMIAR_OCUPACAO_NIVEL_3 = 95.0;
+    private static final double LIMIAR_OCUPACAO_NIVEL_4 = 100.0;
+
+    private static final double LIMIAR_TURNOVER_NIVEL_1 = 10.0;
+    private static final double LIMIAR_TURNOVER_NIVEL_2 = 20.0;
+    private static final double LIMIAR_TURNOVER_NIVEL_3 = 30.0;
+    private static final double LIMIAR_TURNOVER_NIVEL_4 = 40.0;
+
+    private static final double LIMIAR_INDICE_BAIXA = 2.0;
+    private static final double LIMIAR_INDICE_MODERADA = 3.5;
 
     /**
      * Classe interna utilitária para encapsular o resumo estatístico do Length of Stay (LoS).
@@ -107,23 +119,31 @@ public class AnalisadorEstatistico {
     }
 
     /**
-     * Ordena uma lista de enfermarias por taxa de ocupação decrescente (e por ID em caso de empate).
-     * Utiliza uma classe anónima Comparator nativa do Java.
+     * Ordena uma cópia da lista de enfermarias por taxa de ocupação decrescente (e por ID em caso de empate).
      *
      * @param enfermarias lista de enfermarias a ordenar
      * @param data        data de referência para a taxa de ocupação
+     * @return nova lista de enfermarias ordenada
      */
-    public static void ordenarPorTaxaOcupacao(List<Enfermaria> enfermarias, LocalDate data) {
-        enfermarias.sort(new Comparator<Enfermaria>() {
+    public static List<Enfermaria> ordenarPorTaxaOcupacao(List<Enfermaria> enfermarias, LocalDate data) {
+        List<Enfermaria> ordenadas = new ArrayList<>(enfermarias);
+
+        ordenadas.sort(new Comparator<Enfermaria>() {
             @Override
             public int compare(Enfermaria primeira, Enfermaria segunda) {
                 int comparacao = Double.compare(segunda.getTaxaOcupacao(data), primeira.getTaxaOcupacao(data));
+
                 if (comparacao != 0) {
                     return comparacao;
                 }
-                return primeira.getIdentificador().compareToIgnoreCase(segunda.getIdentificador());
+
+                String id1 = primeira.getIdentificador().toUpperCase();
+                String id2 = segunda.getIdentificador().toUpperCase();
+                return id1.compareTo(id2);
             }
         });
+
+        return ordenadas;
     }
 
     /**
@@ -190,35 +210,33 @@ public class AnalisadorEstatistico {
         return count;
     }
 
-    // ===================================================================
-    // MOTORES DE CÁLCULO E ESCALAS DO ÍNDICE DE PRESSÃO (RF6)
-    // ===================================================================
+    // MOTORES DE CÁLCULO E ESCALAS DO ÍNDICE DE PRESSÃO - RF6
 
     /**
-     * Calcula o score de ocupação (1-5) com base na taxa de ocupação.
+     * Calcula o score de ocupação com base na taxa de ocupação.
      *
      * @param percOcup taxa de ocupação em percentagem
-     * @return score de ocupação (valor inteiro entre 1 e 5)
+     * @return score de ocupação
      */
     public static int calcularScoreOcupacao(double percOcup) {
         if (percOcup <= LIMIAR_PRESSAO) return 1;
-        else if (percOcup <= 90) return 2;
-        else if (percOcup <= 95) return 3;
-        else if (percOcup <= 100) return 4;
+        else if (percOcup <= LIMIAR_OCUPACAO_NIVEL_2) return 2;
+        else if (percOcup <= LIMIAR_OCUPACAO_NIVEL_3) return 3;
+        else if (percOcup <= LIMIAR_OCUPACAO_NIVEL_4) return 4;
         else return 5;
     }
 
     /**
-     * Calcula o score de turnover (1-5) com base na percentagem de turnover.
+     * Calcula o score de turnover com base na percentagem de turnover.
      *
      * @param percTurnover percentagem de turnover
-     * @return score de turnover (valor inteiro entre 1 e 5)
+     * @return score de turnover
      */
     public static int calcularScoreTurnover(double percTurnover) {
-        if (percTurnover <= 10) return 1;
-        else if (percTurnover <= 20) return 2;
-        else if (percTurnover <= 30) return 3;
-        else if (percTurnover <= 40) return 4;
+        if (percTurnover <= LIMIAR_TURNOVER_NIVEL_1) return 1;
+        else if (percTurnover <= LIMIAR_TURNOVER_NIVEL_2) return 2;
+        else if (percTurnover <= LIMIAR_TURNOVER_NIVEL_3) return 3;
+        else if (percTurnover <= LIMIAR_TURNOVER_NIVEL_4) return 4;
         else return 5;
     }
 
@@ -229,13 +247,13 @@ public class AnalisadorEstatistico {
      * @return classificação textual do estado de pressão
      */
     public static String interpretarIndice(double indice) {
-        if (indice <= 2) return "Pressao Baixa";
-        else if (indice <= 3.5) return "Pressao Moderada";
+        if (indice <= LIMIAR_INDICE_BAIXA) return "Pressao Baixa";
+        else if (indice <= LIMIAR_INDICE_MODERADA) return "Pressao Moderada";
         else return "Pressao Alta";
     }
 
     /**
-     * Calcula o valor individual ponderado do Índice de Pressão (1 a 5) para uma enfermaria.
+     * Calcula o valor individual ponderado do Índice de Pressão para uma enfermaria.
      *
      * @param enf  enfermaria sob avaliação
      * @param data data de referência para os cálculos
@@ -266,7 +284,6 @@ public class AnalisadorEstatistico {
             public int compare(Enfermaria e1, Enfermaria e2) {
                 double ind1 = calcularIndiceDePressao(e1, data);
                 double ind2 = calcularIndiceDePressao(e2, data);
-                // Ordenação decrescente: comparamos o e2 com o e1
                 return Double.compare(ind2, ind1);
             }
         });
