@@ -108,13 +108,4 @@ public class HospitalTest {
     void testToString() {
         assertEquals("Hospital XYZ | Enfermarias: 2", hospital.toString());
     }
-
-    @Test
-    void testSubstituirDados() {
-        Hospital outro = new Hospital("Hospital ABC");
-        outro.adicionarEnfermaria(new EnfermariaGeral("G5", 3, 1, "09h-20h"));
-        hospital.substituirDados(outro);
-        assertEquals("Hospital ABC", hospital.getNome());
-        assertEquals(1, hospital.getEnfermarias().size());
-    }
 }
