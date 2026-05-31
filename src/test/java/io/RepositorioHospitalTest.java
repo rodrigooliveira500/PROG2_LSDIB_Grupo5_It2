@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testes unitários para a classe GestorSerializacao.
  */
-public class GestorSerializacaoTest {
+public class RepositorioHospitalTest {
 
     private Hospital hospital;
     private static final String FICHEIRO_TESTE = "hospital_teste.ser";
@@ -46,28 +46,28 @@ public class GestorSerializacaoTest {
 
     @Test
     void testGravarECarregarNome() throws IOException, HospitalException {
-        GestorSerializacao.gravarEstado(hospital, FICHEIRO_TESTE);
-        Hospital carregado = GestorSerializacao.carregarEstado(FICHEIRO_TESTE);
+        RepositorioHospital.gravarEstado(hospital, FICHEIRO_TESTE);
+        Hospital carregado = RepositorioHospital.carregarEstado(FICHEIRO_TESTE);
         assertEquals("Hospital XYZ", carregado.getNome());
     }
 
     @Test
     void testGravarECarregarEnfermarias() throws IOException, HospitalException {
-        GestorSerializacao.gravarEstado(hospital, FICHEIRO_TESTE);
-        Hospital carregado = GestorSerializacao.carregarEstado(FICHEIRO_TESTE);
+        RepositorioHospital.gravarEstado(hospital, FICHEIRO_TESTE);
+        Hospital carregado = RepositorioHospital.carregarEstado(FICHEIRO_TESTE);
         assertEquals(1, carregado.getEnfermarias().size());
     }
 
     @Test
     void testGravarECarregarEpisodios() throws IOException, HospitalException {
-        GestorSerializacao.gravarEstado(hospital, FICHEIRO_TESTE);
-        Hospital carregado = GestorSerializacao.carregarEstado(FICHEIRO_TESTE);
+        RepositorioHospital.gravarEstado(hospital, FICHEIRO_TESTE);
+        Hospital carregado = RepositorioHospital.carregarEstado(FICHEIRO_TESTE);
         assertEquals(1, carregado.obterEnfermaria("G1").getEpisodios().size());
     }
 
     @Test
     void testFicheiroExisteAposGravar() throws IOException {
-        GestorSerializacao.gravarEstado(hospital, FICHEIRO_TESTE);
+        RepositorioHospital.gravarEstado(hospital, FICHEIRO_TESTE);
         assertTrue(new File(FICHEIRO_TESTE).exists());
     }
 
@@ -75,7 +75,7 @@ public class GestorSerializacaoTest {
     void testCarregarFicheiroInexistente() {
         boolean lancouExcecao = false;
         try {
-            GestorSerializacao.carregarEstado("ficheiro_inexistente.ser");
+            RepositorioHospital.carregarEstado("ficheiro_inexistente.ser");
         } catch (IOException e) {
             lancouExcecao = true;
         } catch (HospitalException e) {

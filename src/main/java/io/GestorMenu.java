@@ -458,7 +458,7 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
         String ficheiro = leitor.nextLine();
         if (ficheiro.isEmpty()) throw new HospitalException("O nome do ficheiro nao pode estar vazio.");
 
-        GestorSerializacao.gravarEstado(hospital, ficheiro);
+        RepositorioHospital.gravarEstado(hospital, ficheiro);
         System.out.println("Estado gravado com sucesso.");
     }
 
@@ -479,7 +479,7 @@ public static void mostrarGraficosOcupacao(Scanner leitor, Hospital hospital) th
             throw new HospitalException("Ficheiro invalido ou nao encontrado.");
         }
 
-        Hospital hospitalCarregado = GestorSerializacao.carregarEstado(ficheiro);
+        Hospital hospitalCarregado = RepositorioHospital.carregarEstado(ficheiro);
         System.out.println("Estado carregado com sucesso. Enfermarias: " + hospitalCarregado.getEnfermarias().size());
         return hospitalCarregado;
     }

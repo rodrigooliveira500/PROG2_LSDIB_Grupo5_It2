@@ -8,7 +8,7 @@ import java.io.*;
 /**
  * Classe responsavel por gravar e carregar o estado do hospital usando serializacao de objetos.
  */
-public class GestorSerializacao {
+public class RepositorioHospital {
 
     /**
      * Converte o objeto Hospital em bytes e guarda-o num ficheiro.
