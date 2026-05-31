@@ -339,21 +339,6 @@ public static void alterarCapacidade(List<Enfermaria> enfermarias, double percen
     }
 }
 
-    /**
-     * Calcula a percentagem de turnover  numa data especifica.
-     * Baseia-se no numero de altas dadas nesse dia face a capacidade total.
-     *
-     * @param data data a analisar
-     * @return percentagem de turnover
-     */
-    public double getPercTurnover(LocalDate data) {
-        if (numeroCamas <= 0) {
-            return 0.0;
-        }
 
-        int admissoes = getNumeroAdmissoes(data);
-        int altas     = getNumeroAltas(data);
-        return ((admissoes + altas) * 100.0) / numeroCamas;
-    }
 
 }

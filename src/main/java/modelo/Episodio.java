@@ -6,7 +6,7 @@ import java.io.Serializable;
 /**
  * Representa um episódio de internamento.
  */
-public class Episodio implements java.io.Serializable  {
+public class Episodio implements Serializable  {
     private static final long serialVersionUID = 1L;
 
     /** Contador para gerar identificadores simples. */

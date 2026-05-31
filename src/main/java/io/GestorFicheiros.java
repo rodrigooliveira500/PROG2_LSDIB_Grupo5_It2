@@ -142,7 +142,7 @@ public class GestorFicheiros {
             return false;
         }
 
-        String tipo = d[0].trim();
+        String tipo = d[0].trim().toUpperCase();
 
         if (tipo.equals("GERAL"))        return validarCamposGeral(d, linha);
         if (tipo.equals("PSIQUIATRICA")) return validarCamposPsiquiatrica(d, linha);
@@ -196,9 +196,18 @@ public class GestorFicheiros {
      */
     private static boolean validarCamposCuidadosIntensivos(String[] d, int linha) throws IOException {
         if (d.length < 6 || !validarString(d[3]) || !validarDecimal(d[4]) || !validarDecimal(d[5])) {
-            logErro("Linha " + linha + ": INTENSIVOS — horario ou pressoes invalidos.");
+            logErro("Linha " + linha + ": INTENSIVOS — horario ou pressoes numericas invalidas.");
             return false;
         }
+
+        double pressao = Double.parseDouble(d[4].trim());
+        double pressaoRef = Double.parseDouble(d[5].trim());
+
+        if (pressao <= 0 || pressaoRef <= 0) {
+            logErro("Linha " + linha + ": pressoes devem ser positivas.");
+            return false;
+        }
+
         return true;
     }
 
@@ -220,9 +229,7 @@ public class GestorFicheiros {
      * @throws IOException           se ocorrer erro ao escrever no ficheiro de log
      * @throws FileNotFoundException se o ficheiro CSV não for encontrado
      */
-    public static void carregarEnfermarias(String path, Hospital h)
-            throws IOException, FileNotFoundException {
-
+    public static void carregarEnfermarias(String path, Hospital h) throws IOException, FileNotFoundException {
         File f = new File(path);
         if (!f.exists()) {
             System.out.println("Ficheiro nao encontrado: " + path);
@@ -239,143 +246,70 @@ public class GestorFicheiros {
             linha++;
             String[] d = sc.nextLine().trim().split(";");
 
-            if (d.length < 3) {
-                logErro("Linha " + linha + ": campos insuficientes.");
-                continue; // Avança para a próxima linha
-            }
+            // A barreira de entrada. Se a linha não for válida, salta para a próxima imediatamente.
+            if (!validarLinhaEnfermaria(d, linha)) continue;
 
-            String tipo   = d[0].trim().toUpperCase();
-            String id     = d[1].trim();
-            String capStr = d[2].trim();
+            String tipo = d[0].trim().toUpperCase();
+            String id   = d[1].trim();
+            int cap     = Integer.parseInt(d[2].trim());
 
-            if (!validarString(id)) {
-                logErro("Linha " + linha + ": identificador invalido.");
-                continue;
-            }
-
-            try {
-                // Tenta converter diretamente. Se contiver letras ou espaços inválidos,
-                // o Java dispara automaticamente.
-                int cap = Integer.parseInt(capStr);
-
-                if (!validarCapacidade(cap)) {
-                    logErro("Linha " + linha + ": capacidade invalida (" + cap + "). A capacidade deve ser >= 1.");
-                    continue;
-                }
-
-                // Encaminha para os métodos de processamento das subclasses
-                if (tipo.equals("GERAL")) {
-                    processarEnfermariaGeral(d, linha, id, cap, h);
-                } else if (tipo.equals("PSIQUIATRICA")) {
-                    processarEnfermariaPsiquiatrica(d, linha, id, cap, h);
-                } else if (tipo.equals("INTENSIVOS")) {
-                    processarEnfermariaCuidadosIntensivos(d, linha, id, cap, h);
-                } else {
-                    logErro("Linha " + linha + ": tipo desconhecido (" + tipo + ").");
-                }
-
-            } catch (NumberFormatException e) {
-                // Captura nativamente o erro de conversão numérica sem precisar de funções manuais
-                logErro("Linha " + linha + ": capacidade nao e um numero inteiro valido ('" + capStr + "').");
+            if (tipo.equals("GERAL")) {
+                processarEnfermariaGeral(d, id, cap, h);
+            } else if (tipo.equals("PSIQUIATRICA")) {
+                processarEnfermariaPsiquiatrica(d, id, cap, h);
+            } else if (tipo.equals("INTENSIVOS")) {
+                processarEnfermariaCuidadosIntensivos(d, id, cap, h);
             }
         }
         sc.close();
     }
 
+
     /**
      * Processa e cria uma {@link EnfermariaGeral} a partir dos campos do CSV.
      * Utiliza o tratamento de exceções nativo para validar os campos numéricos.
      *
-     * @param d       array de campos lidos do CSV
-     * @param linha   número da linha no ficheiro (para log)
-     * @param id      identificador da enfermaria
-     * @param cap     número total de camas
-     * @param h       hospital onde a enfermaria será adicionada
-     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     * @param d   array de campos lidos do CSV
+     * @param id  identificador da enfermaria
+     * @param cap número total de camas
+     * @param h   hospital onde a enfermaria será adicionada
      */
-    private static void processarEnfermariaGeral(String[] d, int linha,
-                                                 String id, int cap, Hospital h)
-            throws IOException {
+    private static void processarEnfermariaGeral(String[] d, String id, int cap, Hospital h) {
+        int acomp = Integer.parseInt(d[3].trim());
+        EnfermariaGeral eg = new EnfermariaGeral(id, cap, acomp, d[4].trim());
 
-        if (d.length < 5) {
-            logErro("Linha " + linha + ": GERAL requer campos suficientes (tipo;id;capacidade;acompanhantes;horario).");
-            return;
-        }
-
-        try {
-            // Tenta converter o número de acompanhantes diretamente.
-            // Se falhar (ex: conter letras), o Java dispara o NumberFormatException.
-            int acomp = Integer.parseInt(d[3].trim());
-
-            if (acomp < 0) {
-                logErro("Linha " + linha + ": numero de acompanhantes nao pode ser negativo (" + acomp + ").");
-            } else if (!validarString(d[4])) {
-                logErro("Linha " + linha + ": horario de visitas em branco.");
-            } else {
-                EnfermariaGeral eg = new EnfermariaGeral(id, cap, acomp, d[4].trim());
-
-                // Adiciona os recursos opcionais que possam existir a partir do índice 5
-                for (int i = 5; i < d.length; i++) {
-                    if (validarString(d[i])) {
-                        eg.adicionarRecurso(d[i].trim());
-                    }
-                }
-
-                h.adicionarEnfermaria(eg);
+        for (int i = 5; i < d.length; i++) {
+            if (validarString(d[i])) {
+                eg.adicionarRecurso(d[i].trim());
             }
-
-        } catch (NumberFormatException e) {
-            // O catch captura o erro se d[3] não for um número válido, eliminando o validarInteiro
-            logErro("Linha " + linha + ": o numero de acompanhantes nao e um numero inteiro valido ('" + d[3].trim() + "').");
         }
+        h.adicionarEnfermaria(eg);
     }
 
     /**
      * Processa e cria uma {@link EnfermariaPsiquiatrica} a partir dos campos do CSV.
      *
-     * @param d       array de campos lidos do CSV
-     * @param linha   número da linha no ficheiro (para log)
-     * @param id      identificador da enfermaria
-     * @param cap     número total de camas
-     * @param h       hospital onde a enfermaria será adicionada
-     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     * @param d   array de campos lidos do CSV
+     * @param id  identificador da enfermaria
+     * @param cap número total de camas
+     * @param h   hospital onde a enfermaria será adicionada
      */
-    private static void processarEnfermariaPsiquiatrica(String[] d, int linha,
-                                                        String id, int cap, Hospital h)
-            throws IOException {
-
-        if (d.length < 5 || !validarString(d[3]) || !validarString(d[4])) {
-            logErro("Linha " + linha + ": PSIQUIATRICA requer horario e nivel de seguranca.");
-        } else {
-            h.adicionarEnfermaria(new EnfermariaPsiquiatrica(id, cap, d[3].trim(), d[4].trim()));
-        }
+    private static void processarEnfermariaPsiquiatrica(String[] d, String id, int cap, Hospital h) {
+        h.adicionarEnfermaria(new EnfermariaPsiquiatrica(id, cap, d[3].trim(), d[4].trim()));
     }
 
     /**
      * Processa e cria uma {@link EnfermariaCuidadosIntensivos} a partir dos campos do CSV.
      *
-     * @param d       array de campos lidos do CSV
-     * @param linha   número da linha no ficheiro (para log)
-     * @param id      identificador da enfermaria
-     * @param cap     número total de camas
-     * @param h       hospital onde a enfermaria será adicionada
-     * @throws IOException se ocorrer erro ao escrever no ficheiro de log
+     * @param d   array de campos lidos do CSV
+     * @param id  identificador da enfermaria
+     * @param cap número total de camas
+     * @param h   hospital onde a enfermaria será adicionada
      */
-    private static void processarEnfermariaCuidadosIntensivos(String[] d, int linha,
-                                                              String id, int cap, Hospital h)
-            throws IOException {
-
-        if (d.length < 6 || !validarString(d[3]) || !validarDecimal(d[4]) || !validarDecimal(d[5])) {
-            logErro("Linha " + linha + ": INTENSIVOS requer horario, pressao e pressao de referencia validos.");
-        } else {
-            double pressao    = Double.parseDouble(d[4].trim());
-            double pressaoRef = Double.parseDouble(d[5].trim());
-            if (pressao <= 0 || pressaoRef <= 0) {
-                logErro("Linha " + linha + ": pressoes devem ser positivas.");
-            } else {
-                h.adicionarEnfermaria(new EnfermariaCuidadosIntensivos(id, cap, d[3].trim(), pressao, pressaoRef));
-            }
-        }
+    private static void processarEnfermariaCuidadosIntensivos(String[] d, String id, int cap, Hospital h) {
+        double pressao = Double.parseDouble(d[4].trim());
+        double pressaoRef = Double.parseDouble(d[5].trim());
+        h.adicionarEnfermaria(new EnfermariaCuidadosIntensivos(id, cap, d[3].trim(), pressao, pressaoRef));
     }
 
 
@@ -396,7 +330,7 @@ public class GestorFicheiros {
 
         // Saída limpa em vez de estoirar com FileNotFoundException
         if (!ficheiro.exists()) {
-            System.out.println("  [AVISO] Ficheiro nao encontrado: " + path);
+            System.out.println("  AVISO - Ficheiro nao encontrado: " + path);
             return;
         }
 

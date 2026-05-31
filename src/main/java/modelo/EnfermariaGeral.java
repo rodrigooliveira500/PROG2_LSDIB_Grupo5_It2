@@ -29,7 +29,7 @@ public class EnfermariaGeral extends Enfermaria {
    * @param horarioVisitas      horário de visitas permitido
    */
   public EnfermariaGeral(String id, int camas, int limiteAcompanhantes, String horarioVisitas) {
-    super (id, camas);
+    super(id, camas);
     this.limiteAcompanhantes = limiteAcompanhantes;
     this.horarioVisitas = horarioVisitas;
     this.recursosDisponiveis = new ArrayList<>();
