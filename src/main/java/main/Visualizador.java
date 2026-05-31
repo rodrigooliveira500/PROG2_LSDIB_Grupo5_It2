@@ -16,12 +16,7 @@ import java.util.List;
  */
 public class Visualizador {
 
-    /** Altura máxima em linhas do gráfico vertical. */
     private static final int ALTURA_GRAFICO_VERTICAL = 20;
-
-    /** * Largura fixa (número de caracteres) utilizada para representar 100%
-     * nas barras ASCII.
-     */
     private static final int TAMANHO_BARRA_ASCII = 50;
 
     /** Construtor privado — classe utilitária, não deve ser instanciada. */
@@ -45,38 +40,6 @@ public class Visualizador {
         return sb.toString();
     }
 
-    /**
-     * Trunca uma string ao comprimento máximo indicado.
-     *
-     * @param texto    string a truncar
-     * @param maxChars comprimento máximo
-     * @return string truncada
-     */
-    private static String truncar(String texto, int maxChars) {
-        if (texto == null) {
-            return "";
-        }
-        return texto.length() <= maxChars ? texto : texto.substring(0, maxChars);
-    }
-
-    /**
-     * Devolve o valor máximo de uma lista de doubles.
-     *
-     * @param valores lista de valores
-     * @return valor máximo; 0.0 se a lista for vazia
-     */
-    private static double obterMaximo(List<Double> valores) {
-        if (valores == null || valores.isEmpty()) {
-            return 0.0;
-        }
-        double max = valores.get(0);
-        for (double v : valores) {
-            if (v > max) {
-                max = v;
-            }
-        }
-        return max;
-    }
 
     /**
      * Constrói uma barra ASCII proporcional a uma percentagem.
@@ -86,7 +49,7 @@ public class Visualizador {
      * @param simbolo     caracter de preenchimento
      * @return string com a barra formatada
      */
-    private static String construirBarra(double percentagem, char simbolo) {
+    private static String construirBarraHorizontal(double percentagem, char simbolo) {
         double percLimitada;
         if (percentagem > 100.0) {
             percLimitada = 100.0;
@@ -117,29 +80,28 @@ public class Visualizador {
                                              LocalDate dataFim,
                                              char simbolo) {
         if (enfermaria == null || dataInicio == null || dataFim == null) {
-            System.out.println("[ERRO] Parâmetros inválidos para a tabela de ocupação.");
+            System.out.println("ERRO - Parâmetros inválidos para a tabela de ocupação.");
             return;
         }
         if (dataInicio.isAfter(dataFim)) {
-            System.out.println("[ERRO] A data de início não pode ser posterior à data de fim.");
+            System.out.println("ERRO - A data de início não pode ser posterior à data de fim.");
             return;
         }
 
         System.out.println();
         System.out.println("Tabela de Ocupação — " + enfermaria.getIdentificador()
                 + " (" + dataInicio + " a " + dataFim + ")");
-        System.out.println("-".repeat(110));
+        System.out.println(repetir('-', 110));
         System.out.printf("%-12s %-10s %-8s %-11s %-8s %-10s  Barra (escala: 50 = 100%%)%n",
                 "Enfermaria", "Data", "Ocup.", "Camas Tot.", "%Ocup", "Turnover%");
-        System.out.println("-".repeat(110));
-
+        System.out.println(repetir('-', 110));
         LocalDate dataAtual = dataInicio;
         while (!dataAtual.isAfter(dataFim)) {
             int    ocupadas = enfermaria.getOcupacaoAbsoluta(dataAtual);
             int    camas    = enfermaria.getNumeroCamas();
             double percOcup = enfermaria.getTaxaOcupacao(dataAtual);
             double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, dataAtual);
-            String barra    = construirBarra(percOcup, simbolo);
+            String barra    = construirBarraHorizontal(percOcup, simbolo);
 
             System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
                     enfermaria.getIdentificador(),
@@ -152,8 +114,7 @@ public class Visualizador {
 
             dataAtual = dataAtual.plusDays(1);
         }
-        System.out.println("-".repeat(110));
-    }
+        System.out.println(repetir('-', 110));    }
 
     /**
      * Apresenta tabela de ocupação para várias enfermarias numa única data.
@@ -166,7 +127,7 @@ public class Visualizador {
                                              LocalDate data,
                                              char simbolo) {
         if (enfermarias == null || enfermarias.isEmpty()) {
-            System.out.println("Nenhuma enfermaria disponível.");
+            System.out.println("Erro - Nenhuma enfermaria disponível.");
             return;
         }
 
@@ -177,13 +138,13 @@ public class Visualizador {
         System.out.printf("%-12s %-10s %-8s %-11s %-8s %-10s  Barra (escala: 50 = 100%%)%n",
                 "Enfermaria", "Data", "Ocup.", "Camas Tot.", "%Ocup", "Turnover%");
         System.out.println(repetir('=', 110));
-
+    // Percorre todas as enfermarias para a mesma data
         for (Enfermaria enfermaria : enfermarias) {
             int    ocupadas = enfermaria.getOcupacaoAbsoluta(data);
             int    camas    = enfermaria.getNumeroCamas();
             double percOcup = enfermaria.getTaxaOcupacao(data);
             double turnover = AnalisadorEstatistico.calcularTurnover(enfermaria, data);
-            String barra    = construirBarra(percOcup, simbolo);
+            String barra    = construirBarraHorizontal(percOcup, simbolo);
 
             System.out.printf("%-12s %-10s %-8d %-11d %-8.1f %-10.1f  [%s]%n",
                     enfermaria.getIdentificador(),
@@ -208,7 +169,7 @@ public class Visualizador {
     public static void mostrarPercentagemEmPressao(List<Enfermaria> enfermarias,
                                                    LocalDate data) {
         if (enfermarias == null || enfermarias.isEmpty()) {
-            System.out.println("Nenhuma enfermaria registada.");
+            System.out.println("Erro - Nenhuma enfermaria registada.");
             return;
         }
 
@@ -248,37 +209,24 @@ public class Visualizador {
      * @param valores lista de valores correspondentes
      * @param simbolo símbolo a usar no preenchimento
      */
-    public static void mostrarGraficoHorizontal(List<String> rotulos,
-                                                List<Double> valores,
-                                                char simbolo) {
-        if (rotulos == null || valores == null
-                || rotulos.size() != valores.size() || rotulos.isEmpty()) {
-            System.out.println("[ERRO] Dados inválidos para o gráfico horizontal.");
+    public static void mostrarGraficoHorizontal(List<String> rotulos, List<Double> valores, char simbolo) {
+        if (rotulos == null || valores == null || rotulos.size() != valores.size() || rotulos.isEmpty()) {
+            System.out.println("ERRO - Erro nos dados do grafico.");
             return;
         }
 
-        System.out.println();
-        System.out.println("--- Gráfico de Barras Horizontal ---");
-        System.out.println();
+        System.out.println("\n--- Gráfico de Barras Horizontal ---\n");
 
         for (int i = 0; i < rotulos.size(); i++) {
-            double valor       = valores.get(i);
+            double valor = valores.get(i);
 
-            // Matemática corrigida: ancorado a 100%
-            int comprimento = (int) Math.round((valor / 100.0) * TAMANHO_BARRA_ASCII);
-            if (comprimento > TAMANHO_BARRA_ASCII) comprimento = TAMANHO_BARRA_ASCII;
+            String barraCompleta = construirBarraHorizontal(valor, simbolo);
 
-            if (valor > 0 && comprimento == 0) {
-                comprimento = 1; // Garante que não desaparece se for > 0
-            }
-            String barra   = repetir(simbolo, comprimento);
-            String espacos = repetir(' ', TAMANHO_BARRA_ASCII - comprimento);
-
-            System.out.printf("%-15s [%s%s]  %.2f%n",
-                    truncar(rotulos.get(i), 15), barra, espacos, valor);
+            System.out.printf("%-15.15s [%s]  %.2f%%%n", rotulos.get(i), barraCompleta, valor);
         }
         System.out.println();
     }
+
 
     /**
      * Apresenta um gráfico de barras vertical (RF8).
@@ -288,18 +236,13 @@ public class Visualizador {
      * @param valores lista de valores correspondentes
      * @param simbolo símbolo a usar no preenchimento
      */
-    public static void mostrarGraficoVertical(List<String> rotulos,
-                                              List<Double> valores,
-                                              char simbolo) {
-        if (rotulos == null || valores == null
-                || rotulos.size() != valores.size() || rotulos.isEmpty()) {
-            System.out.println("[ERRO] Dados inválidos para o gráfico vertical.");
+    public static void mostrarGraficoVertical(List<String> rotulos, List<Double> valores, char simbolo) {
+        if (rotulos == null || valores == null || rotulos.size() != valores.size() || rotulos.isEmpty()) {
+            System.out.println("ERRO - Dados inválidos para o gráfico vertical.");
             return;
         }
 
-        System.out.println();
-        System.out.println("--- Gráfico de Barras Vertical ---");
-        System.out.println();
+        System.out.println("\n--- Gráfico de Barras Vertical ---\n");
 
         int[] alturas = new int[valores.size()];
         for (int i = 0; i < valores.size(); i++) {
@@ -321,26 +264,26 @@ public class Visualizador {
                     sb.append("     ");
                 }
             }
-            System.out.println(sb.toString());
+            System.out.println(sb);
         }
 
-        System.out.println(repetir('-', rotulos.size() * 5));
+        System.out.println(repetir('-', 50));
 
         StringBuilder rotulosLinha = new StringBuilder();
         for (String r : rotulos) {
-            rotulosLinha.append(String.format("%-5s", truncar(r, 4)));
+            rotulosLinha.append(String.format("%-5.4s", r));
         }
-        System.out.println(rotulosLinha.toString());
+        System.out.println(rotulosLinha);
 
         StringBuilder valoresLinha = new StringBuilder();
         for (double v : valores) {
-            valoresLinha.append(String.format("%-5s", truncar(String.format("%.0f", v), 4)));
+            valoresLinha.append(String.format("%-5.4s", String.format("%.0f", v)));
         }
-        System.out.println(valoresLinha.toString());
+        System.out.println(valoresLinha);
         System.out.println();
     }
 
-    // MÉTODOS ADICIONAIS PARA INTEGRAR A LÓGICA DE APRESENTAÇÃO
+    // MÉTODOS ADICIONAIS
 
     /**
      * Imprime a monitorização diária do estado de pressão de uma unidade.
@@ -348,7 +291,7 @@ public class Visualizador {
      */
     public static void mostrarAnalisePressaoIntervalo(Enfermaria enfermaria, LocalDate dataInicio, LocalDate dataFim) {
         if (dataInicio == null || dataFim == null || dataInicio.isAfter(dataFim)) {
-            System.out.println(" Intervalo inválido.");
+            System.out.println("Erro -  Intervalo inválido.");
             return;
         }
 

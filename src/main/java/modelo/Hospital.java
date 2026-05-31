@@ -64,13 +64,6 @@ public class Hospital implements java.io.Serializable {
         return ordenadas;
     }
 
-
-
-    public void substituirDados(Hospital outro) {
-        this.nome = outro.nome;
-        this.enfermarias = outro.enfermarias;
-    }
-
     @Override
     public String toString() {
         return String.format("%s | Enfermarias: %d", nome, enfermarias.size());
